@@ -1,0 +1,87 @@
+.containPage {
+  padding: 20px 30px;
+}
+
+.loginForm {
+  background-image: url(https://png.pngtree.com/thumb_back/fw800/background/20230516/pngtree-eight-beautiful-holy-book-images-of-the-bible-image_2572084.jpg);
+  margin-top: 40px;
+  border: none;
+  box-shadow: 0px 20px 20px rgba(0, 0, 0, 0.69);
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 500px;
+  margin: 40px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .logo {
+    margin-bottom: 20px;
+
+    img {
+      width: 100px;
+      height: auto;
+    }
+
+    .titleWeb {
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 5px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  .group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+
+    label {
+      display: flex;
+      align-items: center;
+      color: #ffffff;
+      margin-bottom: 5px;
+      font-weight: bold;
+
+      .iconForm {
+        margin-right: 10px;
+      }
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #ffffffad;
+    }
+  }
+
+  .btnRegister {
+    background-image: linear-gradient(to right, #380036, #0CBABA);
+    padding: 12px 24px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-position 0.3s;
+
+    &:hover {
+      background-position: right center;
+    }
+  }
+
+  .error-message {
+    color: #ff5555;
+    margin-top: 10px;
+    text-align: center;
+  }
+}
