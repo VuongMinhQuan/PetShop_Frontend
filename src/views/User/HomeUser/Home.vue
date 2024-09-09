@@ -26,11 +26,6 @@
         </div>
       </div>
     </section>
-
-    <section class="cta">
-      <h2>Ready to Get Started?</h2>
-      <a href="#contact" class="btn">Contact Us</a>
-    </section>
   </div>
 </template>
 

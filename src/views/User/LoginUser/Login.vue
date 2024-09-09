@@ -3,14 +3,28 @@
     <div class="login-container">
       <h2>Chào mừng bạn đến với PetMart</h2>
       <form @submit.prevent="handleLogin">
-        <div class="form-group">
-          <label for="email">Nhập Email/Số điện thoại:</label>
-          <input type="email" id="email" v-model="email" required />
+        <div class="form-floating mb-2">
+          <input
+            type="text"
+            id="login-identifier"
+            v-model="identifier"
+            class="form-control form-control-lg blue-border"
+            placeholder=""
+            required
+          />
+          <label for="login-identifier" class="text-blue">Nhập Email/Số điện thoại</label>
         </div>
-        <div class="form-group">
-          <label for="password">Mật khẩu:</label>
-          <input type="password" id="password" v-model="password" required />
+        <div class="form-floating mb-2">
+          <input
+            v-model="password"
+            type="password"
+            id="login-password"
+            class="form-control form-control-lg blue-border"
+            placeholder=" "
+          />
+          <label for="login-password" class="text-blue">Mật khẩu</label>
         </div>
+
         <button type="submit">Đăng nhập</button>
         <div
           style="
@@ -20,10 +34,12 @@
           "
         >
           <p style="margin: 0">
-            <a href="/user/register">Chưa có tài khoản?</a>
+            <a href="#" @click.prevent="showForgotPasswordModal"
+              >Quên mật khẩu?</a
+            >
           </p>
           <p style="margin: 0">
-            <a href="/forgot-password">Quên mật khẩu?</a>
+            <a href="/user/register">Chưa có tài khoản?</a>
           </p>
         </div>
       </form>
@@ -42,21 +58,96 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Forgot Password -->
+    <div
+      class="modal fade"
+      id="forgotPasswordModal"
+      tabindex="-1"
+      aria-labelledby="forgotPasswordModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="forgotPasswordModalLabel">
+              Quên mật khẩu
+            </h5>
+            <button
+              type="button"
+              class="btn-close ms-auto"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="handleForgotPassword">
+              <div v-if="!otpSent" class="mb-3">
+                <label for="forgotEmail" class="form-label">Nhập Email:</label>
+                <input
+                  type="email"
+                  id="forgotEmail"
+                  v-model="forgotEmail"
+                  class="form-control"
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn btn-primary mt-2"
+                  @click="sendOtp"
+                >
+                  Gửi OTP
+                </button>
+              </div>
+              <div v-if="otpSent" class="mb-3">
+                <label for="otp" class="form-label">Mã xác nhận OTP:</label>
+                <input
+                  type="text"
+                  id="otp"
+                  v-model="otp"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <button v-if="otpSent" type="submit" class="btn btn-primary">
+                Xác nhận
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import { mapActions } from "vuex";
 export default {
   data() {
     return {
-      email: "",
+      identifier: "",
       password: "",
     };
   },
   methods: {
-    handleLogin() {
-      console.log("Email:", this.email);
-      console.log("Password:", this.password);
+    ...mapActions(['login']),
+    async handleLogin() {
+      // Kiểm tra giá trị đầu vào để xác định là email hay số điện thoại
+      const isEmail = this.identifier.includes('@');
+      const payload = {
+        [isEmail ? 'EMAIL' : 'PHONE_NUMBER']: this.identifier,
+        PASSWORD: this.password,
+      };
+      try {
+        // const result = await this.$store.dispatch('login', payload);
+        await this.login(payload);
+        this.$router.push('/user/home');
+        
+      } catch (error) {
+        this.$message.error(
+          error.response?.data?.message || "Đăng nhập thất bại!"
+        );
+      }
     },
   },
 };
@@ -85,7 +176,7 @@ export default {
 }
 
 .login-container {
-  width: 500px;
+  width: 400px; /* Thay đổi kích thước form */
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.3); /* Đường viền mờ */
   border-radius: 8px;
@@ -95,33 +186,32 @@ export default {
   animation: fadeInUp 1s ease-out; /* Thêm hiệu ứng animation */
 }
 
-
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 15px; /* Giảm khoảng cách giữa các trường */
 }
 
 label {
   display: block;
-  margin-bottom: 10px;
-  font-size: 1.2em;
+  margin-bottom: 8px; /* Giảm khoảng cách giữa label và input */
+  font-size: 1.1em; /* Giảm kích thước font của label */
 }
 
 input {
   width: 100%;
-  padding: 10px;
-  font-size: 1.1em;
+  padding: 8px; /* Giảm padding của input */
+  font-size: 1em; /* Giảm kích thước font của input */
   box-sizing: border-box;
-  background-color: #ffff;
+  background-color: #fff;
   border: 1px solid rgba(10, 10, 10, 0.5); /* Đường viền input trong suốt */
 }
 
 button {
   width: 100%;
-  padding: 12px;
+  padding: 10px; /* Giảm padding của nút */
   background-color: rgba(18, 140, 185, 0.8); /* Nút trong suốt */
   border: none;
   color: white;
-  font-size: 1.2em;
+  font-size: 1em; /* Giảm kích thước font của nút */
   cursor: pointer;
 }
 
@@ -134,7 +224,7 @@ button:hover {
 }
 
 .mb-4 {
-  margin-top: 5%;
+  margin-top: 4%; /* Giảm margin-top */
 }
 
 .social-buttons {
@@ -153,5 +243,32 @@ button:hover {
 
 .btn-apple {
   background-color: #000; /* Màu nền của nút Apple */
+}
+
+.btn-close {
+  font-size: 0.8rem; /* Kích thước font nhỏ hơn */
+  width: 1.5rem; /* Đặt chiều rộng */
+  height: 1.5rem; /* Đặt chiều cao */
+  padding: 0.25rem; /* Padding nhỏ hơn */
+  margin: 0; /* Xóa margin */
+  opacity: 0.5; /* Đặt độ mờ cho nút đóng */
+}
+
+/* Màu xanh biển cho border */
+.blue-border {
+  border: 2px solid #6fafeb; /* Màu xanh biển */
+  background-color: #ffffff; /* Giữ nền trắng */
+  color: #06090b; /* Màu text là xanh biển */
+}
+
+/* Khi focus vào input */
+.blue-border:focus {
+  border-color: #1b8df5; /* Xanh biển khi focus */
+  box-shadow: 0 0 5px rgba(27, 141, 245, 0.5); /* Hiệu ứng ánh sáng khi focus */
+}
+
+/* Màu xanh biển cho label */
+.text-blue {
+  color: #0f5394; /* Màu xanh biển cho chữ */
 }
 </style>

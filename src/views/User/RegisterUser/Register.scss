@@ -1,0 +1,104 @@
+.register-page {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: url("@/assets/background.gif");
+    background-size: cover;
+    background-position: center;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.register-container {
+    width: 400px; // Reduced size for the registration form
+    padding: 20px; // Reduced padding
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); // Smaller shadow size
+    background-color: rgba(255, 255, 255, 0.4); // Transparent background color
+    text-align: center;
+    animation: fadeInUp 1s ease-out;
+}
+
+.form-group {
+    margin-bottom: 10px; // Reduced spacing between fields
+}
+
+label {
+    display: block;
+    margin-bottom: 8px; // Reduced spacing below the label
+    font-size: 1.1em; // Reduced font size for the label
+}
+
+input {
+    width: 100%;
+    padding: 8px; // Reduced padding for the input
+    font-size: 1em; // Reduced font size for the input
+    box-sizing: border-box;
+    background-color: rgba(189, 221, 231, 0.7); // Transparent background color
+    border: 1px solid rgba(10, 10, 10, 0.5);
+}
+
+// Input focus effect
+input:focus {
+    outline: none;
+    border-color: #1b8df5;
+    box-shadow: 0 0 4px rgba(27, 141, 245, 0.5);
+}
+
+button {
+    width: 100%;
+    padding: 10px; // Reduced padding for the button
+    background-color: rgba(18, 140, 185, 0.8); // Transparent background color
+    border: none;
+    color: white;
+    font-size: 1.1em; // Reduced font size for the button
+    cursor: pointer;
+}
+
+// Button focus effect
+button:focus {
+    outline: none;
+    box-shadow: 0 0 4px rgba(27, 141, 245, 0.5);
+}
+
+button:hover {
+    background-color: rgba(72, 111, 217, 0.8);
+}
+
+.login-link {
+    margin-top: 15px; // Spacing above the link
+}
+
+.password-container {
+    position: relative;
+}
+
+.eye-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.eye-icon i {
+    font-size: 18px;
+    color: #333;
+}
+
+.error {
+    color: red;
+    font-size: 15px;
+}
