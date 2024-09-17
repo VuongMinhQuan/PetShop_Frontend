@@ -15,8 +15,9 @@ const store = createStore({
       state.userInfo = userInfo;
       state.isLoggedIn = true;
     },
-    SET_LOGIN_STATE(state) {
+    SET_LOGIN_STATE(state, userInfo) {
       state.isLoggedIn = true;
+      state.userInfo = userInfo;
     },
     LOGOUT(state) {
       state.isLoggedIn = false;
@@ -39,11 +40,19 @@ const store = createStore({
         if (response.status >= 200 && response.status <= 300) {
           const token = response.data.accessToken;
           localStorage.setItem("accessToken", token);
-          commit("SET_LOGIN_STATE");
+          // commit("SET_LOGIN_STATE", userInfo);
 
-          dispatch("checkToken"); // Lấy thông tin người dùng sau khi login thành công
+          const userInfo = await dispatch("checkToken"); // Lấy thông tin người dùng sau khi login thành công
+          if (userInfo) {
+            const roles = userInfo.ROLE;
 
-          message.success("Đăng nhập thành công!");
+            // Kiểm tra vai trò và điều hướng dựa trên role
+            if (roles.ADMIN) {
+              router.push("/dashboard"); // Điều hướng admin đến Dashboard
+            } else {
+              router.push("/user/home"); // Điều hướng người dùng thông thường
+            }
+          }
         }
       } catch (error) {
         // message.error("Đăng nhập thất bại!");
@@ -54,35 +63,27 @@ const store = createStore({
       localStorage.removeItem("accessToken");
       commit("LOGOUT");
       message.success("Đã đăng xuất thành công!");
+      router.push("/user/login");
     },
-    async checkToken({ commit }) {
+    async checkToken({ commit, dispatch }) {
       const token = localStorage.getItem("accessToken");
       if (token) {
         try {
-          const response = await axios.get("/users/profile", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const response = await axios.get("/users/profile");
           if (response.status >= 200 && response.status < 300) {
             const userInfo = response.data;
-            commit("SET_USER_INFO", userInfo);
 
-            // Redirect based on user role
-            if (
-              userInfo.ROLE.ADMIN
-             ) {
-              router.push("/dashboard");
-            } else {
-              router.push("/user/home");
-            }
+            commit("SET_USER_INFO", userInfo);
+            // const roles = userInfo.ROLE;
+
+            return userInfo;
           } else {
             console.error("Unexpected response status:", response.status);
-            commit("LOGOUT");
+            dispatch("LOGOUT");
           }
         } catch (error) {
           console.error("Error while checking token:", error);
-          commit("LOGOUT");
+          dispatch("LOGOUT");
         }
       } else {
         console.log("No token found in localStorage.");

@@ -1,0 +1,173 @@
+.home {
+    font-family: Arial, sans-serif;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.hero {
+    height: 60vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    text-align: center;
+    padding: 0 20px;
+}
+
+.hero-image {
+    width: 100%;
+    height: 100%;
+    /* Đảm bảo chiều cao bằng với phần hero */
+    object-fit: cover;
+    border-radius: 10px;
+    /* Giữ tỉ lệ bo góc giống nhau */
+}
+
+.features {
+    padding: 50px 20px;
+    text-align: center;
+}
+
+.feature-list {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.feature {
+    width: 30%;
+    margin: 20px 0;
+}
+
+.feature img {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.feature img:hover {
+    transform: scale(1.1);
+}
+
+.feature h3,
+.feature p {
+    transition: color 0.3s ease;
+}
+
+.feature:hover h3,
+.feature:hover p {
+    color: #3ba8cd;
+}
+
+.feature h3 {
+    margin: 10px 0;
+}
+
+.features h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+    background: linear-gradient(to right, #14a2d1, #9ad3de);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.feature p {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+.view-more {
+    margin-top: 20px;
+}
+
+.btn-view-more {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #65c6e7;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-view-more:hover {
+    background-color: #3391b6;
+}
+
+.cta {
+    background-color: #f39c12;
+    color: #fff;
+    padding: 50px 20px;
+    text-align: center;
+}
+
+.cta h2 {
+    margin: 0 0 20px 0;
+}
+
+.cta .btn {
+    background-color: #fff;
+    color: #333;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1.2rem;
+}
+
+.banner-and-images {
+    display: flex;
+    margin: 50px 0;
+    padding: 0 50px;
+}
+
+.banner-left {
+    width: 35%;
+    padding: 0 10px;
+}
+
+.banner-left img {
+    width: 290px;
+    /* Kích thước rộng */
+    height: 550px;
+    /* Kích thước cao */
+    object-fit: cover;
+    /* Đảm bảo ảnh không bị biến dạng */
+    border-radius: 10px;
+    /* Giữ tỉ lệ bo góc giống nhau */
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.grid-item {
+    text-align: center;
+}
+
+.grid-item:hover img {
+    transform: scale(1.05);
+    /* Phóng to ảnh khi hover */
+}
+
+.grid-item p {
+    margin-top: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+}
+.grid-container img {
+    width: 95%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 5px;
+}

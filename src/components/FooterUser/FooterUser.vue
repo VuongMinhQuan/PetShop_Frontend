@@ -18,10 +18,12 @@
         </div>
         <div class="footer-contact">
           <div class="contact-item">
-            <p>Điện thoại: +84 899 302 777</p>
+            <h3>Liên hệ : </h3>
+            <p class="contact-info">+84 899 302 777</p>
           </div>
           <div class="contact-item">
-            <p>Email: quanpetshop@gmail.com</p>
+            <h3>Email :</h3>
+            <p class="contact-info"> quanpetshop@gmail.com</p>
           </div>
         </div>
       </div>
@@ -31,6 +33,7 @@
     </div>
   </footer>
 </template>
+
 
 <script>
 export default {
@@ -94,7 +97,15 @@ export default {
           flex: 1; /* Chiếm không gian bằng nhau */
           display: flex;
           justify-content: flex-start; /* Căn chỉnh nội dung sang bên trái */
-          p {
+           h3 {
+            margin: 0;
+            font-size: 1.2rem; /* Kích thước chữ lớn hơn */
+            font-weight: bold; /* Làm chữ đậm */
+          }
+
+          .contact-info {
+            font-size: 1rem; /* Kích thước chữ thông tin liên hệ */
+            font-weight: normal; /* Chữ thông tin liên hệ không đậm */
             margin: 0;
           }
         }

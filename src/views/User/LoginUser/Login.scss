@@ -1,0 +1,115 @@
+.login-page {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: url("@/assets/background2.jpg");
+    background-size: cover;
+    background-position: center;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-container {
+    width: 400px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    background-color: rgba(241, 240, 244, 0.6);
+    text-align: center;
+    animation: fadeInUp 1s ease-out;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1.1em;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    font-size: 1em;
+    box-sizing: border-box;
+    background-color: #fff;
+    border: 1px solid rgba(10, 10, 10, 0.5);
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: rgba(18, 140, 185, 0.8);
+    border: none;
+    color: white;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: rgba(72, 111, 217, 0.8);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.mb-4 {
+    margin-top: 4%;
+}
+
+.social-buttons {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.btn-google {
+    background-color: #db4437;
+}
+
+.btn-facebook {
+    background-color: #3b5998;
+}
+
+.btn-apple {
+    background-color: #000;
+}
+
+.btn-close {
+    font-size: 0.8rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0.25rem;
+    margin: 0;
+    opacity: 0.5;
+}
+
+.blue-border {
+    border: 2px solid #6fafeb;
+    background-color: #ffffff;
+    color: #06090b;
+}
+
+.blue-border:focus {
+    border-color: #1b8df5;
+    box-shadow: 0 0 5px rgba(27, 141, 245, 0.5);
+}
+
+.text-blue {
+    color: #0f5394;
+}
