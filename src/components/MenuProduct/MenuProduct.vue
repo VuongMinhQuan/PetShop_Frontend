@@ -12,34 +12,50 @@
         <li>
           <h4>Thú cưng</h4>
           <ul>
-            <li>Chó</li>
-            <li>Mèo</li>
-            <li>Hamster</li>
-            <li>Chim</li>
+            <li @click="filterBySubType(['Alaska', 'Husky', 'Golden', 'Bull Pháp', 'Corgi', 'Poodle', 'Pug', 'Samoyed'])">
+              <i class="fas fa-dog"></i>
+              Chó
+            </li>
+            <li @click="filterBySubType(['Cat'])">
+              <i class="fas fa-cat"></i>
+              Mèo
+            </li>
           </ul>
         </li>
         <li>
           <h4>Thức ăn</h4>
           <ul>
-            <li>Cho chó</li>
-            <li>Cho mèo</li>
-            <li>Cho hamster</li>
-            <li>Cho chim</li>
+            <li @click="filterBySubType(['FDog'])">
+              <i class="fas fa-bone"></i>
+              Cho chó
+            </li>
+            <li @click="filterBySubType(['FCat'])">
+              <i class="fas fa-fish"></i>
+              Cho mèo
+            </li>
           </ul>
         </li>
         <li>
           <h4>Đồ dùng</h4>
           <ul>
-            <li>Đồ chơi</li>
-            <li>Chuồng</li>
-            <li>Balo</li>
+            <li @click="filterBySubType(['Toy'])">
+              <i class="fas fa-puzzle-piece"></i>
+              Đồ chơi
+            </li>
+            <li @click="filterBySubType(['Cage'])">
+              <i class="fas fa-warehouse"></i>
+              Chuồng
+            </li>
+            <li @click="filterBySubType(['Bag'])">
+              <i class="fas fa-shopping-bag"></i> 
+              Balo
+            </li>
           </ul>
         </li>
       </ul>
     </transition>
   </div>
 </template>
-
 
 <script>
 export default {
@@ -52,6 +68,9 @@ export default {
   methods: {
     toggleMenu() {
       this.isMenuVisible = !this.isMenuVisible; // Chuyển đổi trạng thái hiển thị
+    },
+    filterBySubType(subTypes) {
+      this.$emit('filterBySubType', subTypes); // Truyền mảng các subTypes lên component cha
     },
   },
 };

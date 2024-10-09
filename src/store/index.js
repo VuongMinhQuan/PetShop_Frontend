@@ -9,6 +9,8 @@ const store = createStore({
     userInfo: null,
     editingMode: false,
     users: [],
+    cartProducts: [],
+    selectedProductsCart: [],
   },
   mutations: {
     SET_USER_INFO(state, userInfo) {
@@ -22,6 +24,12 @@ const store = createStore({
     LOGOUT(state) {
       state.isLoggedIn = false;
       state.userInfo = null;
+    },
+    SET_CART_PRODUCTS(state, cart) {
+      state.cartProducts = cart.PRODUCTS;
+    },
+    SET_SELECTEDPRODUCTS_CART(state, products) {
+      state.selectedProductsCart = products;
     },
   },
   actions: {
@@ -48,7 +56,7 @@ const store = createStore({
 
             // Kiểm tra vai trò và điều hướng dựa trên role
             if (roles.ADMIN) {
-              router.push("/dashboard"); // Điều hướng admin đến Dashboard
+              router.push("/user/home"); // Điều hướng admin đến Dashboard
             } else {
               router.push("/user/home"); // Điều hướng người dùng thông thường
             }
@@ -89,10 +97,30 @@ const store = createStore({
         console.log("No token found in localStorage.");
       }
     },
+    async fetchCart({ commit }) {
+      try {
+        const response = await axios.post("/carts/getCartById");
+
+        if (response.data.success) {
+          commit("SET_CART_PRODUCTS", response.data.data);
+        } else {
+          console.error("API response error:", response.data.message);
+        }
+      } catch (error) {
+        console.error(
+          "Error fetching cart:",
+          error.response ? error.response.data : error.message
+        );
+      }
+    },
   },
   getters: {
     isLoggedIn: (state) => state.isLoggedIn,
     userInfo: (state) => state.userInfo,
+    cartItemCount: (state) => {
+      return state.cartProducts.length;
+    },
+    getSelectedProductsCart: (state) => state.selectedProductsCart,
   },
 });
 

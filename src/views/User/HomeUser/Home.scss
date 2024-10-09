@@ -22,6 +22,7 @@
     object-fit: cover;
     border-radius: 10px;
     /* Giữ tỉ lệ bo góc giống nhau */
+    
 }
 
 .features {
@@ -83,6 +84,22 @@
     transition: color 0.3s ease;
 }
 
+.product-image-wrapper {
+    position: relative;
+}
+
+.new-product-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: red;
+    color: white;
+    padding: 5px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
 .view-more {
     margin-top: 20px;
 }
@@ -122,9 +139,49 @@
     font-size: 1.2rem;
 }
 
+.title-dog {
+    text-align: center;
+    /* Căn giữa chữ */
+    margin-bottom: 20px;
+    /* Khoảng cách bên dưới */
+}
+
+@keyframes smooth-color-change {
+    0% {
+        color: #a0d8ef;
+    }
+
+    20% {
+        color: #67b7e1;
+    }
+
+    40% {
+        color: #3ba8cd;
+    }
+
+    60% {
+        color: #107bbe;
+    }
+
+    80% {
+        color: #0b5394;
+    }
+
+    100% {
+        color: #053061;
+    }
+}
+
+.dog-breeds-title {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    animation: smooth-color-change 5s infinite alternate;
+}
+
 .banner-and-images {
     display: flex;
-    margin: 50px 0;
+    margin: 20px 0;
     padding: 0 50px;
 }
 
@@ -152,6 +209,38 @@
 
 .grid-item {
     text-align: center;
+    position: relative;
+    cursor: pointer;
+}
+.grid-item::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    /* Đặt ở dưới cùng của grid-item */
+    height: 2px;
+    /* Chiều cao của đường gạch dưới */
+    width: 100%;
+    background-color: #3ba8cd;
+    /* Màu xanh của đường gạch dưới */
+    transform: scaleX(0);
+    /* Ban đầu không hiển thị */
+    transition: transform 0.3s ease;
+    /* Hiệu ứng chuyển động */
+}
+
+.grid-item:hover::after {
+    transform: scaleX(1);
+    /* Hiện đường gạch dưới khi hover */
+}
+
+.grid-item img {
+    width: 95%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 5px;
+    transition: transform 0.3s ease;
+    /* Hiệu ứng khi hover */
 }
 
 .grid-item:hover img {
@@ -170,4 +259,33 @@
     height: auto;
     object-fit: cover;
     border-radius: 5px;
+}
+
+.cat-breeds-title {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    animation: smooth-color-change 5s infinite alternate;
+}
+
+.icon-paw {
+    margin: 0 5px;
+}
+
+.banner-and-images {
+    display: flex;
+    margin: 20px 0;
+    padding: 0 50px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.grid-item {
+    text-align: center;
+    position: relative;
+    cursor: pointer;
 }

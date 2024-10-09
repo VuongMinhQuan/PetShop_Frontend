@@ -25,9 +25,10 @@
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
-    "sweetalert2": "^11.12.0",
+    "sweetalert2": "^11.14.1",
     "vue": "^3.2.25",
     "vue-router": "^4.0.12",
+    "vue-toast-notification": "^3.1.3",
     "vue3-toastify": "^0.2.1",
     "vuex": "^4.1.0"
   },

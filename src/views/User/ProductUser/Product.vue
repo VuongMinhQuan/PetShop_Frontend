@@ -1,11 +1,16 @@
 <template>
   <div class="product-page">
-    <MenuProduct/>
+    <MenuProduct @filterBySubType="filterProductsBySubType" />
     <div class="main-content">
       <!-- Banner Section -->
       <div class="carousel">
         <div class="carousel-inner">
-          <div v-for="(banner, index) in banners" :key="index" class="carousel-item" :class="{ active: index === currentIndex }">
+          <div
+            v-for="(banner, index) in banners"
+            :key="index"
+            class="carousel-item"
+            :class="{ active: index === currentIndex }"
+          >
             <img :src="banner" alt="Banner" />
           </div>
         </div>
@@ -13,74 +18,340 @@
 
       <!-- Search Section -->
       <div class="search-section">
-        <input type="text" v-model="searchQuery" placeholder="Tìm kiếm sản phẩm..." @input="filterProducts" />
+        <input
+          type="text"
+          v-model="searchQuery"
+          placeholder="Tìm kiếm sản phẩm..."
+          @keyup.enter="filterProducts"
+        />
       </div>
 
       <!-- Products Section -->
       <div class="products">
-        <div v-for="product in products" :key="product._id" class="product-card">
-          <img :src="product.IMAGES[0] || '@/assets/banner.jpg'" :alt="product.NAME" />
-          <h3>{{ product.NAME }}</h3>
-          <p>{{ formatPrice(product.PRICE) }}</p>
-          <button class="buy-button">Chọn mua</button>
+        <div v-if="noProductsFound" class="no-products">
+          Sản phẩm không tồn tại!
         </div>
+        <div
+          v-else
+          v-for="product in paginatedProducts"
+          :key="product._id"
+          class="product-card"
+          @mouseenter="handleMouseEnter(product)"
+          @mouseleave="handleMouseLeave(product)"
+        >
+          <img
+            :src="
+              product.currentImage || product.IMAGES[0] || '@/assets/banner.jpg'
+            "
+            :alt="product.NAME"
+            class="product-image"
+          />
+          <h3 @click="goToProductDetail(product._id)" class="product-name">
+            {{ product.NAME }}
+          </h3>
+          <p>{{ formatPrice(product.PRICE) }}</p>
+
+          <div class="action-container">
+            <button
+              class="buy-button"
+              @click="addToCart(product)"
+              :disabled="product.QUANTITY === 0"
+              :class="{ 'disabled-button': product.QUANTITY === 0 }"
+            >
+              <font-awesome-icon icon="cart-plus" /> Thêm vào giỏ hàng
+            </button>
+            <!-- Icon Heart in Circle -->
+            <div class="heart-icon" @click="toggleFavorite(product)">
+              <font-awesome-icon
+                :icon="product.isFavorite ? 'heart' : ['far', 'heart']"
+                :class="{ 'red-heart': product.isFavorite }"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination Section -->
+      <div v-if="totalPages > 1" class="pagination">
+        <button :disabled="currentPage === 1" @click="changePage('prev')">
+          Trang trước
+        </button>
+        <span>Trang {{ currentPage }} / {{ totalPages }}</span>
+        <button
+          :disabled="currentPage === totalPages"
+          @click="changePage('next')"
+        >
+          Trang sau
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import axios from '../../../api/axiosClient';
-import bannerProduct from '@/assets/bannerproduct.jpg';
-import bannerProduct1 from '@/assets/bannerproduct1.jpg';
-import bannerProduct2 from '@/assets/bannerproduct2.jpg';
-import MenuProduct from '@/components/MenuProduct/MenuProduct.vue'; // Import MenuProduct
+import bannerProduct from "@/assets/bannerproduct.jpg";
+import bannerProduct1 from "@/assets/bannerproduct1.jpg";
+import bannerProduct2 from "@/assets/bannerproduct2.jpg";
+import MenuProduct from "@/components/MenuProduct/MenuProduct.vue"; // Import MenuProduct
+import axiosClient from "../../../api/axiosClient";
 
 export default {
   components: {
-    MenuProduct // Register component
+    MenuProduct, // Register component
   },
   data() {
     return {
-      banners: [
-        bannerProduct,
-        bannerProduct1,
-        bannerProduct2
-      ],
+      banners: [bannerProduct, bannerProduct1, bannerProduct2],
       currentIndex: 0,
-      products: [] // Đảm bảo biến này được khởi tạo đúng
+      products: [], // Đảm bảo biến này được khởi tạo đúng
+      searchQuery: "",
+      noProductsFound: false,
+      currentPage: 1, // Trang hiện tại
+      itemsPerPage: 12, // Số sản phẩm mỗi trang
     };
+  },
+  computed: {
+    isLogin() {
+      return this.$store.state.isLoggedIn; // Truy cập trực tiếp vào state trong Vuex store
+    },
+    totalPages() {
+      return Math.ceil(this.products.length / this.itemsPerPage);
+    },
+    // Lấy danh sách sản phẩm thuộc trang hiện tại
+    paginatedProducts() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.products.slice(start, end);
+    },
   },
   mounted() {
     this.startCarousel();
-    this.fetchProducts(); // Gọi hàm để lấy sản phẩm khi component được gắn
+    const subType = this.$route.query.subType;
+    if (subType) {
+      this.filterProductsBySubType([subType]); // Gọi hàm lọc sản phẩm
+    } else {
+      this.fetchProducts(); // Nếu không có subType, lấy tất cả sản phẩm
+    }
   },
   methods: {
     startCarousel() {
-      const items = document.querySelectorAll('.carousel-item');
+      const items = document.querySelectorAll(".carousel-item");
       this.currentIndex = 0; // Set the initial index to show the first item
 
       setInterval(() => {
-        items[this.currentIndex].classList.remove('active');
+        items[this.currentIndex].classList.remove("active");
         this.currentIndex = (this.currentIndex + 1) % items.length;
-        items[this.currentIndex].classList.add('active');
+        items[this.currentIndex].classList.add("active");
       }, 5000); // Change every 5 seconds
     },
     async fetchProducts() {
       try {
-        const response = await axios.get('/products/getAllProducts'); // URL của endpoint API
+        // Lấy tất cả sản phẩm
+        const response = await axiosClient.get("/products/getAllProducts"); // URL của endpoint API
         console.log(response.data);
-        this.products = response.data.data || response.data; // Gán dữ liệu sản phẩm vào biến products
+        this.products = response.data.data || response.data;
+
+        // Lấy danh sách sản phẩm yêu thích
+        const favoritesResponse = await axiosClient.get("/users/favorites");
+        const favoriteProducts = favoritesResponse.data.favorites || []; // Danh sách sản phẩm yêu thích
+
+        // Tạo một tập hợp các ID sản phẩm yêu thích để kiểm tra
+        const favoriteIds = favoriteProducts.map((product) => product._id);
+
+        // Cập nhật trạng thái isFavorite cho từng sản phẩm
+        this.products.forEach((product) => {
+          product.currentImage = product.IMAGES[0]; // Thiết lập hình ảnh ban đầu
+          product.isFavorite = favoriteIds.includes(product._id); // Kiểm tra nếu sản phẩm nằm trong danh sách yêu thích
+        });
+
+        // Kiểm tra không có sản phẩm nào
+        this.noProductsFound = this.products.length === 0;
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     },
+
+    changePage(direction) {
+      if (direction === "prev" && this.currentPage > 1) {
+        this.currentPage--;
+      } else if (direction === "next" && this.currentPage < this.totalPages) {
+        this.currentPage++;
+      }
+    },
     formatPrice(price) {
-      if (!price) return '0.000đ'; // Đảm bảo giá có giá trị
-      const formattedValue = parseFloat(price).toLocaleString('vi-VN');
-      return `${formattedValue}.000đ`; // Thêm đuôi ".000 đ" cho mọi giá trị
-    }
-  }
+      if (!price) return "0.000₫"; // Đảm bảo giá có giá trị
+      const formattedValue = parseFloat(price).toLocaleString("vi-VN");
+      return `${formattedValue}.000₫`; // Thêm đuôi ".000 đ" cho mọi giá trị
+    },
+    async addToCart(product) {
+      // Kiểm tra trạng thái đăng nhập từ computed isLogin
+      if (!this.isLogin) {
+        this.$toast.warning(
+          "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.",
+          {
+            position: "top-right",
+            duration: 3000,
+          }
+        );
+        return; // Ngăn không cho thực hiện hành động nếu chưa đăng nhập
+      }
+
+      try {
+        const response = await axiosClient.put("/carts/addProduct", {
+          productId: product._id,
+          quantity: 1, // Số lượng sản phẩm muốn thêm, mặc định là 1
+        });
+
+        if (response.data.success) {
+          // Hiển thị thông báo thành công
+          this.$toast.success("Đã thêm sản phẩm vào giỏ hàng.", {
+            position: "top-right",
+            duration: 3000,
+          });
+
+          this.$store.dispatch("fetchCart");
+        } else {
+          // Nếu có lỗi, hiển thị thông báo lỗi
+          this.$toast.error(response.data.message, {
+            position: "top-right",
+            duration: 3000,
+          });
+        }
+      } catch (error) {
+        // Xử lý lỗi nếu có
+        if (error.response && error.response.data.message) {
+          this.$toast.error(error.response.data.message, {
+            position: "top-right",
+            duration: 3000,
+          });
+        } else {
+          this.$toast.error("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.", {
+            position: "top-right",
+            duration: 3000,
+          });
+        }
+        console.error("Lỗi thêm sản phẩm vào giỏ hàng:", error);
+      }
+    },
+    async toggleFavorite(product) {
+      try {
+        if (product.isFavorite) {
+          // Gọi API để xóa sản phẩm khỏi danh sách yêu thích
+          await axiosClient.post("/users/removeFavorite", {
+            productId: product._id,
+          });
+          this.$toast.success(
+            "Sản phẩm đã được xóa khỏi danh sách yêu thích.",
+            {
+              position: "top-right",
+              duration: 3000,
+            }
+          );
+        } else {
+          // Gọi API để thêm sản phẩm vào danh sách yêu thích
+          await axiosClient.put("/users/addFavorite", {
+            productId: product._id,
+          });
+          this.$toast.success(
+            "Sản phẩm đã được thêm vào danh sách yêu thích.",
+            {
+              position: "top-right",
+              duration: 3000,
+            }
+          );
+        }
+
+        // Thay đổi trạng thái yêu thích
+        product.isFavorite = !product.isFavorite; // Thay đổi trạng thái yêu thích
+      } catch (error) {
+        console.error("Error updating favorite product:", error);
+        this.$toast.error("Có lỗi xảy ra khi cập nhật danh sách yêu thích.", {
+          position: "top-right",
+          duration: 3000,
+        });
+        product.isFavorite = !product.isFavorite; // Khôi phục lại trạng thái cũ nếu có lỗi
+      }
+    },
+
+    async filterProducts() {
+      try {
+        if (this.searchQuery.trim() === "") {
+          this.fetchProducts(); // Nếu ô tìm kiếm trống thì hiển thị tất cả sản phẩm
+          this.noProductsFound = false; // Đặt lại trạng thái
+          return;
+        }
+
+        // Gửi yêu cầu tìm kiếm sản phẩm dựa trên từ khóa
+        const response = await axiosClient.get("/products/search", {
+          params: { keyword: this.searchQuery.trim() },
+        });
+
+        this.products = response.data.data || response.data;
+        // Lấy danh sách sản phẩm yêu thích
+        const favoritesResponse = await axiosClient.get("/users/favorites");
+        const favoriteProducts = favoritesResponse.data.favorites || [];
+
+        // Tạo một tập hợp các ID sản phẩm yêu thích để kiểm tra
+        const favoriteIds = favoriteProducts.map((product) => product._id);
+        if (this.products.length === 0) {
+          this.noProductsFound = true;
+        } else {
+          // Nếu có sản phẩm, đặt lại trạng thái không tìm thấy sản phẩm
+          this.noProductsFound = false;
+        }
+        this.products.forEach((product) => {
+          product.currentImage = product.IMAGES[0]; // Thiết lập ảnh chính
+          product.isFavorite = favoriteIds.includes(product._id); // Kiểm tra xem sản phẩm có trong danh sách yêu thích không
+        });
+      } catch (error) {
+        console.error("Error searching products:", error);
+        this.noProductsFound = true; // Đặt trạng thái không tìm thấy nếu có lỗi
+      }
+    },
+    async filterProductsBySubType(subTypes) {
+      try {
+        const response = await axiosClient.post("/products/filter", {
+          subType: subTypes,
+        });
+
+        this.products = response.data.data || response.data;
+
+        // Lấy danh sách sản phẩm yêu thích
+        const favoritesResponse = await axiosClient.get("/users/favorites");
+        const favoriteProducts = favoritesResponse.data.favorites || []; // Danh sách sản phẩm yêu thích
+
+        // Tạo một tập hợp các ID sản phẩm yêu thích để kiểm tra
+        const favoriteIds = favoriteProducts.map((product) => product._id);
+
+        // Cập nhật trạng thái isFavorite cho từng sản phẩm trong danh sách đã lọc
+        this.products.forEach((product) => {
+          product.currentImage = product.IMAGES[0];
+          product.isFavorite = favoriteIds.includes(product._id); // Kiểm tra nếu sản phẩm nằm trong danh sách yêu thích
+        });
+
+        // Kiểm tra nếu không có sản phẩm nào
+        this.noProductsFound = this.products.length === 0;
+      } catch (error) {
+        console.error("Error filtering products by subType:", error);
+        this.noProductsFound = true;
+      }
+    },
+    handleMouseEnter(product) {
+      // Kiểm tra nếu có ảnh thứ 2, thay đổi ảnh khi hover
+      if (product.IMAGES.length > 1) {
+        product.currentImage = product.IMAGES[1];
+      } else {
+        // Nếu không có ảnh thứ 2, không làm gì
+      }
+    },
+    handleMouseLeave(product) {
+      // Quay lại ảnh ban đầu khi không hover nữa
+      product.currentImage = product.IMAGES[0];
+    },
+    goToProductDetail(productId) {
+      this.$router.push(`/user/products/${productId}`);
+    },
+  },
 };
 </script>
 
@@ -164,6 +435,20 @@ export default {
   box-sizing: border-box;
   margin: 0;
   text-align: center; /* Canh giữa nội dung bên trong card */
+  border: 1px solid #8d8686; /* Viền mỏng màu xám nhạt */
+  border-radius: 0px; /* Bo góc nhẹ cho sản phẩm */
+  padding: 10px; /* Khoảng cách bên trong viền */
+  background-color: #fff; /* Màu nền trắng cho sản phẩm */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Tạo bóng nhẹ để nổi bật sản phẩm */
+  transition: box-shadow 0.3s ease, transform 0.3s ease; /* Hiệu ứng khi hover */
+  display: flex;
+  flex-direction: column; /* Xếp chồng các phần tử theo chiều dọc */
+  justify-content: space-between;
+}
+
+.product-card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Tăng cường bóng khi hover */
+  transform: translateY(-5px); /* Nhẹ nhàng nhấc sản phẩm lên khi hover */
 }
 
 .product-card img {
@@ -172,10 +457,11 @@ export default {
   object-fit: cover; /* Cắt ảnh theo kích thước cố định mà không bị méo */
   border-radius: 10px;
   transition: transform 0.3s ease; /* Hiệu ứng chuyển động */
+  margin: 0 auto;
 }
 
 .product-card img:hover {
-  transform: scale(1.1); /* Phóng to ảnh lên 10% khi hover */
+  transform: scale(1.07);
 }
 
 .product-card p {
@@ -184,11 +470,12 @@ export default {
   color: #333;
 }
 
-.product-card h3, .product-card p {
+.product-card h3,
+.product-card p {
   transition: color 0.3s ease; /* Hiệu ứng chuyển màu mượt mà */
 }
 
-.product-card:hover h3, 
+.product-card:hover h3,
 .product-card:hover p {
   color: #3ba8cd; /* Màu xanh biển nhạt khi hover */
 }
@@ -206,7 +493,15 @@ export default {
 
 /* CSS cho nút "Chọn mua" */
 .buy-button {
-  background-color: #fff; /* Màu nền trắng */
+  background: linear-gradient(
+    to right,
+    #3ba8cd 0%,
+    #3ba8cd 50%,
+    #fff 50%,
+    #fff 100%
+  );
+  background-size: 200% 100%; /* Gấp đôi chiều rộng để tạo hiệu ứng trượt */
+  background-position: 100% 0; /* Đặt vị trí bắt đầu là phía bên phải */
   color: #333; /* Màu chữ đen */
   border: 2px solid #333; /* Đường viền màu đen để tạo sự nổi bật */
   padding: 10px 20px;
@@ -214,13 +509,45 @@ export default {
   cursor: pointer;
   font-size: 1rem;
   margin-top: 10px;
-  transition: background-color 0.3s ease, color 0.3s ease; /* Hiệu ứng chuyển màu nền và chữ */
+  transition: background-position 0.5s ease, color 0.3s ease; /* Hiệu ứng chuyển vị trí background */
 }
 
 .buy-button:hover {
-  background-color: #3ba8cd; /* Màu nền xanh biển khi hover */
+  background-position: 0 0; /* Dịch chuyển background về vị trí ban đầu */
   color: #fff; /* Màu chữ trắng khi hover */
   border: 2px solid #3ba8cd; /* Đổi màu viền khi hover */
+}
+
+/* CSS cho nút bị vô hiệu hóa */
+.disabled-button {
+  background-color: #ccc; /* Màu nền khi bị vô hiệu hóa */
+  color: #666; /* Màu chữ khi bị vô hiệu hóa */
+  cursor: not-allowed; /* Con trỏ không cho phép */
+  opacity: 0.6; /* Hiệu ứng làm mờ */
+}
+
+.action-container {
+  display: flex; /* Sử dụng flex để căn chỉnh icon và nút */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  justify-content: flex-start; /* Canh trái */
+  margin-top: 10px; /* Khoảng cách bên trên */
+}
+
+.heart-icon {
+  width: 40px; /* Chiều rộng của vòng tròn */
+  height: 40px; /* Chiều cao của vòng tròn */
+  border: 2px solid #8d8686; /* Đường viền màu xám nhạt */
+  border-radius: 50%; /* Bo góc thành vòng tròn */
+  background-color: white; /* Màu nền trắng */
+  display: flex; /* Sử dụng flex để căn giữa icon */
+  justify-content: center; /* Căn giữa icon theo chiều ngang */
+  align-items: center; /* Căn giữa icon theo chiều dọc */
+  margin-left: 10px; /* Khoảng cách giữa nút và icon */
+  cursor: pointer; /* Thay đổi con trỏ khi hover */
+}
+
+.red-heart {
+  color: red;
 }
 
 /* Media queries */
@@ -241,6 +568,4 @@ export default {
     width: calc(100% - 20px); /* Hiển thị 1 sản phẩm trên một hàng */
   }
 }
-
 </style>
-

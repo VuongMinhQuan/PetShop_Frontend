@@ -48,14 +48,21 @@
                   }}</span>
                   <div v-if="isUserMenuOpen" class="user-menu">
                     <a class="user-menu-item" href="">
-                      <i class="fas fa-cart-plus"></i> Giỏ hàng
+                      <i class="fas fa-user"></i> Hồ sơ
+                    </a>
+                    <a class="user-menu-item" href="/user/favorite">
+                      <i class="fa-regular fa-heart"></i> Yêu thích
                     </a>
                     <a class="user-menu-item" @click="logout">
                       <i class="fas fa-right-from-bracket"></i> Đăng xuất
                     </a>
                   </div>
                 </div>
+                <a class="cart-icon" href="/user/cart">
+                  <i class="fas fa-shopping-cart"></i>
+                </a>
               </template>
+
               <template v-else>
                 <a class="btn auth-btn login-btn" href="/user/login"
                   >Đăng nhập</a
@@ -84,10 +91,10 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["isLoggedIn", "userInfo"]),
+    ...mapGetters(["isLoggedIn", "userInfo", "cartItemCount"]),
   },
   methods: {
-    ...mapActions(["logout"]),
+    ...mapActions(["logout", "fetchCart"]),
     toggleNavbar() {
       this.isNavbarOpen = !this.isNavbarOpen;
     },
@@ -103,8 +110,19 @@ export default {
       }
     },
   },
-  mounted() {
+  async mounted() {
     this.$store.dispatch("checkToken"); // Kiểm tra trạng thái đăng nhập khi component được mount
+    if (this.isLoggedIn) {
+      await this.fetchCart();
+    }
+  },
+  watch: {
+    "$store.state.cartProducts": {
+      handler() {
+        this.cartItemCount = this.$store.getters.cartItemCount;
+      },
+      deep: true,
+    },
   },
 };
 </script>
@@ -193,7 +211,7 @@ header {
         .auth-links {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 20px;
           margin-left: auto;
 
           .btn {
@@ -228,6 +246,19 @@ header {
           .login-btn:hover {
             background-color: #0b1419;
             border-color: #d0deed;
+          }
+          .cart-icon {
+            position: relative; // Để định vị cho cart-count
+            font-size: 24px; // Kích thước icon giỏ hàng
+            color: #ffffff; // Màu trắng cho icon
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &:hover {
+              color: #0f538a; // Màu khi hover vào giỏ hàng
+            }
           }
         }
       }

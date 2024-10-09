@@ -4,25 +4,22 @@ import { createRouter, createWebHistory } from 'vue-router'
 import UserLayout from "../layouts/UserLayout/UserLayout.vue"
 
 
-
-// Page Organization
-import store from "@/store"
-import HomePageOrgan from "@/views/PageOrgan/HomePage/HomePage.vue"
-
-
 import Login from '../views/User/LoginUser/Login.vue'
 // import Login from '../components/Login/Login.vue'
 import LoginLayout from '../layouts/Login/LoginLayout.vue'
 import Register from '../views/User/RegisterUser/Register.vue'
 import Home from '../views/User/HomeUser/Home.vue'
 import Product from '../views/User/ProductUser/Product.vue'
+import Cart from '../views/User/CartUser/Cart.vue'
+import ProductDetail from '../views/User/DetailProduct/ProductDetail.vue'
+import Booking from '../views/User/BookingUser/Booking.vue'
+import Favorite from '../views/User/FavoriteUser/Favorite.vue'
 const routes = [
   {
     path: "/user/login",
     component: Login,
     meta: {
       layout: LoginLayout,
-      
     },
   },
   {
@@ -46,34 +43,47 @@ const routes = [
       layout: UserLayout,
     },
   },
+  {
+    path: "/user/cart",
+    name: "CartPage",
+    component: Cart,
+    meta: {
+      layout: UserLayout,
+    },
+  },
+  {
+    path: "/user/products/:id",
+    component: ProductDetail,
+    meta: {
+      layout: UserLayout,
+    },
+  },
+  {
+    path: "/user/booking/payment",
+    name: "BookingPage",
+    component: Booking,
+    meta: {
+      layout: UserLayout,
+    },
+  },
+  {
+    path: "/user/favorite",
+    component: Favorite,
+    meta: {
+      layout: UserLayout,
+    },
+  },
 ];
 const router = createRouter({
-	history: createWebHistory(),
-	routes,
-})
-
-// router.beforeEach((to, from, next) => {
-// 	const isLoggedIn = store.getters.isLoggedIn;
-// 	const userInfo = store.getters.userInfo;
-
-// 	let userRole = '';
-// 	if (userInfo?.ROLE?.IS_ADMIN) {
-// 		userRole = 'admin';
-// 	} else if (userInfo?.ROLE?.IS_ORGANIZATION) {
-// 		userRole = 'organization';
-// 	} else {
-// 		userRole = 'guest';
-// 	}
-
-// 	if (to.matched.some(record => record.meta.requiresAuth)) {
-// 		if (isLoggedIn && to.matched.some(record => record.meta.roles && record.meta.roles.includes(userRole))) {
-// 			next();
-// 		} else {
-// 			next('/login');
-// 		}
-// 	} else {
-// 		next();
-// 	}
-
+  history: createWebHistory(),
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition; // Nếu có vị trí cuộn được lưu, cuộn lại vị trí đó
+    } else {
+      return { top: 0 }; // Cuộn về đầu trang
+    }
+  },
+});
 
 export default router;
