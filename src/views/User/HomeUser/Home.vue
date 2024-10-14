@@ -184,9 +184,8 @@ export default {
       }
     },
     formatPrice(price) {
-      if (!price) return "0.000";
       const formattedValue = parseFloat(price).toLocaleString("vi-VN");
-      return `${formattedValue}.000`;
+      return `${formattedValue}`;
     },
     goToFilteredProducts(subType) {
       this.$router.push({

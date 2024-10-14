@@ -105,8 +105,8 @@ export default {
   methods: {
     formatCurrency(value) {
       if (!value) return "0 đ";
-      const formattedValue = value * 1000; // Nhân giá trị gốc lên 1000
-      return formattedValue.toLocaleString("vi-VN") + " đ"; // Định dạng theo chuẩn Việt Nam
+      const formattedValue = value;
+      return formattedValue.toLocaleString("vi-VN") + " đ";
     },
     async fetchCart() {
       try {
@@ -234,7 +234,7 @@ export default {
         return;
       }
       this.$store.commit("SET_SELECTEDPRODUCTS_CART", selectedProducts);
-      this.$router.push({ name: "BookingPage" });
+      this.$router.push({ name: "PaymentPage" });
     },
   },
   computed: {

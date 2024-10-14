@@ -87,12 +87,13 @@ import axiosClient from "../../../api/axiosClient"; // Đảm bảo bạn đã i
 import { mapGetters } from "vuex";
 
 export default {
-  name: "BookingPage",
+  name: "PaymentPage",
   data() {
     return {
       selectedProducts: [], // Các sản phẩm đã chọn từ giỏ hàng
       totalPrice: 0, // Tổng giá tiền
       loading: true, // Trạng thái tải dữ liệu
+      isEditing: false, // Trạng thái để hiển thị form chỉnh sửa
     };
   },
   computed: {
@@ -130,7 +131,7 @@ export default {
     },
     formatCurrency(value) {
       if (!value) return "0 đ";
-      return (value * 1000).toLocaleString("vi-VN") + " đ"; // Định dạng tiền tệ Việt Nam
+      return value.toLocaleString("vi-VN") + " đ"; // Định dạng tiền tệ Việt Nam
     },
     fetchSelectedProducts() {
       try {

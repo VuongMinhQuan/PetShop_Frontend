@@ -179,9 +179,8 @@ export default {
       }
     },
     formatPrice(price) {
-      if (!price) return "0.000₫"; // Đảm bảo giá có giá trị
       const formattedValue = parseFloat(price).toLocaleString("vi-VN");
-      return `${formattedValue}.000₫`; // Thêm đuôi ".000 đ" cho mọi giá trị
+      return `${formattedValue} ₫`; // Thêm đuôi ".000 đ" cho mọi giá trị
     },
     async addToCart(product) {
       // Kiểm tra trạng thái đăng nhập từ computed isLogin

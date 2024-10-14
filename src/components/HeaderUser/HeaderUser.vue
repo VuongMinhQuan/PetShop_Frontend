@@ -53,6 +53,9 @@
                     <a class="user-menu-item" href="/user/favorite">
                       <i class="fa-regular fa-heart"></i> Yêu thích
                     </a>
+                    <a class="user-menu-item" href="/user/history">
+                      <i class="fa-regular fa-clock"></i> Lịch sử
+                    </a>
                     <a class="user-menu-item" @click="logout">
                       <i class="fas fa-right-from-bracket"></i> Đăng xuất
                     </a>

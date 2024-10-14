@@ -9,11 +9,13 @@ import Login from '../views/User/LoginUser/Login.vue'
 import LoginLayout from '../layouts/Login/LoginLayout.vue'
 import Register from '../views/User/RegisterUser/Register.vue'
 import Home from '../views/User/HomeUser/Home.vue'
+import History from '../views/User/HistoryUser/History.vue'
 import Product from '../views/User/ProductUser/Product.vue'
 import Cart from '../views/User/CartUser/Cart.vue'
 import ProductDetail from '../views/User/DetailProduct/ProductDetail.vue'
-import Booking from '../views/User/BookingUser/Booking.vue'
+import Payment from '../views/User/PaymentUser/Payment.vue'
 import Favorite from '../views/User/FavoriteUser/Favorite.vue'
+import Profile from '../views/User/ProfileUser/Profile.vue'
 const routes = [
   {
     path: "/user/login",
@@ -32,6 +34,13 @@ const routes = [
   {
     path: "/user/home",
     component: Home,
+    meta: {
+      layout: LoginLayout,
+    },
+  },
+  {
+    path: "/user/profile",
+    component: Profile,
     meta: {
       layout: LoginLayout,
     },
@@ -60,8 +69,8 @@ const routes = [
   },
   {
     path: "/user/booking/payment",
-    name: "BookingPage",
-    component: Booking,
+    name: "PaymentPage",
+    component: Payment,
     meta: {
       layout: UserLayout,
     },
@@ -69,6 +78,13 @@ const routes = [
   {
     path: "/user/favorite",
     component: Favorite,
+    meta: {
+      layout: UserLayout,
+    },
+  },
+  {
+    path: "/user/history",
+    component: History,
     meta: {
       layout: UserLayout,
     },

@@ -4,7 +4,6 @@
     <div v-if="isLoading" class="spinner-overlay">
       <div class="spinner"></div>
     </div>
-
     <!-- Nội dung chi tiết sản phẩm -->
     <div v-else>
       <div class="product-detail">
@@ -32,10 +31,11 @@
             <span class="label">Giá bán:</span>
             {{ formatPrice(product.PRICE) }}
             <span class="quantity"> | Số lượng: {{ product.QUANTITY }} |</span>
-            <div v-if="product.QUANTITY === 0" class="out-of-stock">Hết hàng</div>
+            <div v-if="product.QUANTITY === 0" class="out-of-stock">
+              Hết hàng
+            </div>
             <div v-else class="in-stock">Còn hàng</div>
           </div>
-          
 
           <div class="special-offers">
             <h2>Đặc Quyền Chi Có Tại Q-PetShop</h2>
@@ -197,9 +197,8 @@ export default {
       }
     },
     formatPrice(price) {
-      if (!price) return "0.000₫"; // Đảm bảo giá có giá trị
       const formattedValue = parseFloat(price).toLocaleString("vi-VN");
-      return `${formattedValue}.000₫`; // Thêm đuôi ".000₫" cho mọi giá trị
+      return `${formattedValue}₫`; // Thêm đuôi ".000₫" cho mọi giá trị
     },
     async addToCart(product) {
       // Kiểm tra trạng thái đăng nhập từ computed isLogin
@@ -451,6 +450,9 @@ export default {
 
 .accompanying-product-card {
   width: calc(25% - 20px); /* Hiển thị 4 sản phẩm trên một hàng */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   box-sizing: border-box;
   margin: 0;
   text-align: center;
