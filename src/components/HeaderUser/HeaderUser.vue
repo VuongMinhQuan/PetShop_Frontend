@@ -1,5 +1,5 @@
 <template>
-  <header>
+  <header class="header-user">
     <div class="main-menu">
       <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container">
@@ -60,7 +60,7 @@
                       <i class="fas fa-right-from-bracket"></i> Đăng xuất
                     </a>
                   </div>
-                </div>
+                </div>  
                 <a class="cart-icon" href="/user/cart">
                   <i class="fas fa-shopping-cart"></i>
                 </a>
@@ -131,7 +131,7 @@ export default {
 </script>
 
 <style lang="scss">
-header {
+.header-user {
   background: linear-gradient(to right, #a0c4ff, #3e8ccb);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;

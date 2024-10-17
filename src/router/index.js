@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-// import AdminLayout from "../layouts/AdminLayout/AdminLayout.vue"
+import AdminLayout from '../layouts/AdminLayout/AdminLayout.vue'
 import UserLayout from "../layouts/UserLayout/UserLayout.vue"
 
 
@@ -16,6 +16,9 @@ import ProductDetail from '../views/User/DetailProduct/ProductDetail.vue'
 import Payment from '../views/User/PaymentUser/Payment.vue'
 import Favorite from '../views/User/FavoriteUser/Favorite.vue'
 import Profile from '../views/User/ProfileUser/Profile.vue'
+import Dashboard from '../views/Admin/Dashboard.vue'
+import ProductManager from  '../views/Admin/ProductManager.vue'
+
 const routes = [
   {
     path: "/user/login",
@@ -87,6 +90,20 @@ const routes = [
     component: History,
     meta: {
       layout: UserLayout,
+    },
+  },
+  {
+    path: "/dashboard",
+    component: Dashboard,
+    meta: {
+      layout: AdminLayout,
+    },
+  },
+  {
+    path: "/products",
+    component: ProductManager,
+    meta: {
+      layout: AdminLayout,
     },
   },
 ];

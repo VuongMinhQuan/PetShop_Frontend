@@ -66,29 +66,47 @@
       <!-- Hiển thị danh sách sản phẩm đi kèm -->
       <div class="accompanying-products" v-if="accompanyingProducts.length > 0">
         <h3>Sản phẩm đi kèm</h3>
-        <div class="accompanying-products-list">
-          <div
-            v-for="accompanyingProduct in accompanyingProducts"
-            :key="accompanyingProduct._id"
-            class="accompanying-product-card"
-            @click="goToProductDetail(accompanyingProduct._id)"
+        <div class="product-slider">
+          <button
+            @click="prevPage"
+            class="slider-button prev-button"
+            :disabled="currentPage === 0"
           >
-            <img
-              :src="accompanyingProduct.IMAGES[0] || '@/assets/banner.jpg'"
-              :alt="accompanyingProduct.NAME"
-              class="accompanying-product-image"
-            />
-            <h4>{{ accompanyingProduct.NAME }}</h4>
-            <p>{{ formatPrice(accompanyingProduct.PRICE) }}</p>
-
-            <!-- Nút thêm vào giỏ hàng -->
-            <button
-              class="buy-button"
-              @click.stop="addToCart(accompanyingProduct)"
+            <i class="fa fa-chevron-left"></i>
+          </button>
+          <div class="accompanying-products-list">
+            <div
+              v-for="(accompanyingProduct, index) in paginatedProducts"
+              :key="accompanyingProduct._id"
+              class="accompanying-product-card"
+              @click="goToProductDetail(accompanyingProduct._id)"
             >
-              <font-awesome-icon icon="cart-plus" /> Thêm vào giỏ hàng
-            </button>
+              <img
+                :src="accompanyingProduct.IMAGES[0] || '@/assets/banner.jpg'"
+                :alt="accompanyingProduct.NAME"
+                class="accompanying-product-image"
+              />
+              <h4>{{ accompanyingProduct.NAME }}</h4>
+              <p>{{ formatPrice(accompanyingProduct.PRICE) }}</p>
+
+              <!-- Nút thêm vào giỏ hàng -->
+              <button
+                class="buy-button"
+                @click.stop="addToCart(accompanyingProduct)"
+              >
+                <font-awesome-icon icon="cart-plus" /> Thêm vào giỏ hàng
+              </button>
+            </div>
           </div>
+
+          <!-- Nút chuyển sang sản phẩm tiếp theo -->
+          <button
+            @click="nextPage"
+            class="slider-button next-button"
+            :disabled="currentPage === maxPage"
+          >
+            <i class="fa fa-chevron-right"></i>
+          </button>
         </div>
       </div>
 
@@ -131,11 +149,23 @@ export default {
       relatedProducts: [],
       accompanyingProducts: [],
       isLoading: false,
+      currentPage: 0, // Quản lý trang hiện tại của slider
+      itemsPerPage: 4, // Số sản phẩm hiển thị trên mỗi trang
     };
   },
   computed: {
     isLogin() {
       return this.$store.state.isLoggedIn; // Truy cập trực tiếp vào state trong Vuex store
+    },
+    paginatedProducts() {
+      const start = this.currentPage * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.accompanyingProducts.slice(start, end);
+    },
+    maxPage() {
+      return (
+        Math.ceil(this.accompanyingProducts.length / this.itemsPerPage) - 1
+      );
     },
   },
   mounted() {
@@ -147,6 +177,16 @@ export default {
     },
   },
   methods: {
+    prevPage() {
+      if (this.currentPage > 0) {
+        this.currentPage--;
+      }
+    },
+    nextPage() {
+      if (this.currentPage < this.maxPage) {
+        this.currentPage++;
+      }
+    },
     async fetchProductDetail() {
       try {
         const productId = this.$route.params.id;
@@ -463,6 +503,7 @@ export default {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .accompanying-product-card:hover {
@@ -495,6 +536,51 @@ export default {
   font-weight: bold;
   color: #333;
   margin-bottom: 10px;
+}
+.product-slider {
+  position: relative;
+  /* display: flex;
+  align-items: center; */
+}
+
+/* CSS cho nút Next */
+.slider-button.next-button {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  background-color: #3ba8cd;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  border-radius: 50%;
+  transform: translateY(-50%); /* Canh giữa theo chiều dọc */
+}
+
+/* CSS cho nút Prev */
+.slider-button.prev-button {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  background-color: #3ba8cd;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  border-radius: 50%;
+  transform: translateY(-50%); /* Canh giữa theo chiều dọc */
+  z-index: 10;
+}
+
+.slider-button:hover {
+  background-color: #007bff;
+}
+
+.slider-button:disabled {
+  background-color: #ccc; /* Màu xám nhạt khi bị vô hiệu hóa */
+  cursor: not-allowed;
 }
 
 .special-offers,

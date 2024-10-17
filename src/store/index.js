@@ -56,7 +56,7 @@ const store = createStore({
 
             // Kiểm tra vai trò và điều hướng dựa trên role
             if (roles.ADMIN) {
-              router.push("/user/home"); // Điều hướng admin đến Dashboard
+              router.push("/dashboard"); // Điều hướng admin đến Dashboard
             } else {
               router.push("/user/home"); // Điều hướng người dùng thông thường
             }
