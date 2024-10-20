@@ -2,104 +2,140 @@
   <div class="booking-page">
     <h1>Thông tin Đặt hàng</h1>
     <div v-if="loading">Đang tải thông tin đặt hàng...</div>
-    <div v-if="!loading && selectedProducts.length > 0">
-      <div class="address-info">
-        <h2 class="address-header">
-          <i class="fas fa-location-dot location-icon"></i>
-          Địa chỉ nhận hàng
-        </h2>
-        <div class="address-row">
-          <div class="address-column">
-            <p>
-              Địa chỉ: <span class="bold-text">{{ userInfo.ADDRESS }}</span>
-            </p>
-          </div>
-          <div class="address-column">
-            <p>
-              <i class="fa-solid fa-user"></i> Họ tên:
-              <span class="bold-text">{{ userInfo.FULLNAME }}</span>
-            </p>
-          </div>
-          <div class="address-column">
-            <p>
-              <i class="fa-solid fa-phone"></i> Số điện thoại:
-              <span class="bold-text">(+84) {{ userInfo.PHONE_NUMBER }}</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-list">
-        <div
-          v-for="product in selectedProducts"
-          :key="product.PRODUCT_ID._id"
-          class="product-card"
-        >
-          <img
-            :src="getImage(product)"
-            alt="Hình ảnh sản phẩm"
-            class="product-image"
-          />
-          <div class="product-details">
-            <div class="product-row">
-              <div class="product-column name-column">
-                <h3>{{ getProductName(product) }}</h3>
-              </div>
-              <div class="product-column quantity-column">
-                <p>Số lượng:</p>
-                <p class="quantity-value">{{ product.QUANTITY }}</p>
-              </div>
-              <div class="product-column price-column">
-                <p>Đơn giá:</p>
-                <p>{{ formatCurrency(product.PRICE) }}</p>
-              </div>
-              <div class="product-column total-column">
-                <p class="product-total">
-                  Thành tiền:
-                  {{ formatCurrency(product.TOTAL_PRICE_FOR_PRODUCT) }}
-                </p>
+    <div v-if="!loading && selectedProducts.length > 0" class="booking-content">
+      <!-- Bên trái: Danh sách sản phẩm -->
+      <div class="product-list-container">
+        <h2 class="section-header">Danh sách sản phẩm</h2>
+        <div class="product-list">
+          <div
+            v-for="product in selectedProducts"
+            :key="product.PRODUCT_ID._id"
+            class="product-card"
+          >
+            <img
+              :src="getImage(product)"
+              alt="Hình ảnh sản phẩm"
+              class="product-image"
+            />
+            <div class="product-details">
+              <div class="product-row">
+                <div class="product-column name-column">
+                  <h3>{{ getProductName(product) }}</h3>
+                </div>
+                <div class="product-column quantity-column">
+                  <p>Số lượng:</p>
+                  <p class="quantity-value">{{ product.QUANTITY }}</p>
+                </div>
+                <div class="product-column price-column">
+                  <p>Đơn giá:</p>
+                  <p>{{ formatCurrency(product.PRICE) }}</p>
+                </div>
+                <div class="product-column total-column">
+                  <p class="product-total">
+                    Thành tiền:
+                    {{ formatCurrency(product.TOTAL_PRICE_FOR_PRODUCT) }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="payment-total-row">
-        <div class="payment-method">
-          <h2>Phương thức thanh toán:</h2>
-          <div class="checkbox-group">
-            <label>
-              <input
-                type="radio"
-                value="COD"
-                v-model="paymentMethod"
-                name="paymentMethod"
-              />
-              Thanh toán khi nhận hàng (COD)
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="VNPay"
-                v-model="paymentMethod"
-                name="paymentMethod"
-              />
-              Thanh toán bằng VNPay
-            </label>
+      <div class="payment-info-container">
+        <!-- Container chung với viền cho cả Địa chỉ nhận hàng và Phương thức thanh toán -->
+        <div class="combined-info">
+          <!-- Phần địa chỉ nhận hàng -->
+          <div class="address-info">
+            <h2 class="address-header">
+              <i class="fas fa-location-dot location-icon"></i>
+              Địa chỉ nhận hàng
+            </h2>
+            <div class="address-row">
+              <div class="address-column">
+                <p>
+                  <i class="fas fa-location-dot"></i>
+                  Địa chỉ:
+                  <input
+                    type="text"
+                    v-model="customerAddress"
+                    :placeholder="userInfo?.ADDRESS"
+                    class="input-field"
+                  />
+                </p>
+              </div>
+              <div class="address-column">
+                <p>
+                  <i class="fa-solid fa-user"></i> Họ tên:
+                  <input
+                    type="text"
+                    v-model="customerName"
+                    :placeholder="userInfo?.FULLNAME"
+                    class="input-field"
+                  />
+                </p>
+              </div>
+              <div class="address-column">
+                <p>
+                  <i class="fa-solid fa-phone"></i> Số điện thoại:
+                  <input
+                    type="text"
+                    v-model="customerPhone"
+                    :placeholder="userInfo?.PHONE_NUMBER"
+                    class="input-field"
+                  />
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Phần phương thức thanh toán -->
+          <div class="payment-method-total">
+            <div class="payment-method">
+              <h2>Phương thức thanh toán:</h2>
+              <div class="checkbox-group">
+                <label>
+                  <input
+                    type="radio"
+                    value="COD"
+                    v-model="paymentMethod"
+                    name="paymentMethod"
+                  />
+                  Thanh toán khi nhận hàng (COD)
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    value="VNPay"
+                    v-model="paymentMethod"
+                    name="paymentMethod"
+                  />
+                  Thanh toán bằng VNPay
+                </label>
+              </div>
+              <hr class="separator-line" />
+            </div>
+
+            <!-- Căn chỉnh tổng thanh toán và nút thanh toán trên cùng một hàng -->
+            <div class="total-payment-row">
+              <div class="total-payment">
+                <h2>Tổng thanh toán:</h2>
+                <h2 class="total-payment-price">
+                  {{ formatCurrency(totalPrice) }}
+                </h2>
+              </div>
+
+              <div class="payment-btn">
+                <button @click="handlePayment" class="confirm-booking-btn">
+                  Xác nhận thanh toán
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="total-payment">
-          <h2>Tổng thanh toán:</h2>
-          <h2 class="total-payment-price">{{ formatCurrency(totalPrice) }}</h2>
-        </div>
-      </div>
-      <!-- Nút Thanh Toán -->
-      <div class="payment-btn">
-        <button @click="handlePayment" class="confirm-booking-btn">
-          Xác nhận thanh toán
-        </button>
       </div>
     </div>
+
     <div v-if="!loading && selectedProducts.length === 0">
       <p>Giỏ hàng của bạn đang trống.</p>
     </div>
@@ -119,6 +155,9 @@ export default {
       loading: true, // Trạng thái tải dữ liệu
       isEditing: false, // Trạng thái để hiển thị form chỉnh sửa
       paymentMethod: "VNPay",
+      customerName: this.userInfo?.FULLNAME || "",
+      customerPhone: this.userInfo?.PHONE_NUMBER || "",
+      customerAddress: this.userInfo?.ADDRESS || "",
     };
   },
   computed: {
@@ -128,6 +167,9 @@ export default {
     },
   },
   created() {
+    this.customerName = this.userInfo?.FULLNAME || "";
+    this.customerPhone = this.userInfo?.PHONE_NUMBER || "";
+    this.customerAddress = this.userInfo?.ADDRESS || "";
     this.selectedProducts = this.$store.getters.getSelectedProductsCart;
     console.log("Sản phẩm đã chọn trong BookingPage:", this.selectedProducts);
     if (!this.selectedProducts || this.selectedProducts.length === 0) {
@@ -176,14 +218,22 @@ export default {
         this.loading = false;
       }
     },
+    async getProvince(){
+       const province = await axiosClient.get(
+          "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province",
+          {headers: 'Token: 8dbe2a0f-8ec3-11ef-8e53-0a00184fe694'}
+        );
+        console.log(province.data);
+        
+    },
     async handlePayment() {
       try {
         const productsDetails = this.selectedProducts.map((product) => ({
           PRODUCT_ID: product.PRODUCT_ID,
           QUANTITY: product.QUANTITY,
-          CUSTOMER_PHONE: this.userInfo.PHONE_NUMBER,
-          CUSTOMER_NAME: this.userInfo.FULLNAME,
-          CUSTOMER_ADDRESS: this.userInfo.ADDRESS,
+          CUSTOMER_PHONE: this.customerPhone || this.userInfo.PHONE_NUMBER,
+          CUSTOMER_NAME: this.customerName || this.userInfo.FULLNAME,
+          CUSTOMER_ADDRESS: this.customerAddress || this.userInfo.ADDRESS,
         }));
         console.log("Dữ liệu gửi lên server:", productsDetails);
 
@@ -245,6 +295,11 @@ export default {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+.booking-content {
+  display: flex; /* Đặt layout flexbox */
+  gap: 20px; /* Khoảng cách giữa các cột */
+}
+
 /* Căn giữa tiêu đề */
 h1 {
   text-align: center; /* Canh giữa */
@@ -269,6 +324,28 @@ h1 {
   gap: 20px; /* Khoảng cách giữa các sản phẩm */
 }
 
+.product-list-container {
+  flex: 1; /* Chiếm đầy đủ không gian bên trái */
+}
+
+.product-list-container h2 {
+  color: #3ba8cd;
+}
+
+.payment-info-container {
+  flex: 1; /* Chiếm đầy đủ không gian bên phải */
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Khoảng cách giữa các phần tử */
+}
+
+.address-info,
+.payment-total-row {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+}
+
 .address-header {
   display: flex;
   align-items: center; /* Căn giữa icon và chữ */
@@ -284,6 +361,9 @@ h1 {
   font-weight: bold; /* Làm cho chữ trong userInfo đậm hơn */
 }
 
+.hidden {
+  display: none;
+}
 .product-card {
   display: flex;
   flex-direction: row;
@@ -292,7 +372,8 @@ h1 {
   padding: 15px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #a49d9d; /* 2px là độ dày của viền, bạn có thể tăng lên */
+  box-shadow: 2px 2px 2px 4px rgba(0, 0, 0, 0.2);
   background-color: #f9f9f9;
 }
 
@@ -327,8 +408,14 @@ h1 {
   color: #333;
   text-align: center;
 }
-.quantity-value {
-  padding: 0 30px;
+
+.combined-info {
+  background-color: #f5f5f5;
+  border: 2px solid #a49d9d; /* Viền chung cho cả phần */
+  border-radius: 8px; /* Bo tròn góc */
+  box-shadow: 2px 2px 2px 4px rgba(0, 0, 0, 0.1); /* Bóng đổ nhẹ */
+  display: flex;
+  flex-direction: column; /* Căn dọc các phần tử bên trong */
 }
 
 .payment-total-row {
@@ -337,8 +424,14 @@ h1 {
   align-items: center; /* Đảm bảo các phần tử cùng hàng */
   margin-top: 30px;
 }
+
+.total-payment-row {
+  display: flex;
+  align-items: center; /* Căn giữa theo chiều dọc */
+  justify-content: space-between; /* Căn đều 2 bên */
+  margin-top: 20px;
+}
 .total-payment {
-  margin-top: 30px;
   font-size: 20px;
   font-weight: bold;
   text-align: right;
@@ -350,12 +443,22 @@ h1 {
 
 .total-payment-price {
   color: #0a6f90;
-  padding-right: 20px;
+  display: flex;
+  justify-content: center;
 }
 
 .payment-method {
   text-align: left; /* Canh lề trái */
   padding-left: 20px; /* Khoảng cách từ lề trái */
+}
+
+.payment-method-total {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column; /* Sắp xếp theo chiều dọc */
+  gap: 20px;
 }
 
 .checkbox-group {
@@ -380,8 +483,15 @@ h1 {
   margin-top: 20px;
 }
 
+.input-field {
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
 .confirm-booking-btn {
-  background-color: #a06e5c;
+  background-color: #1181a6;
   color: white;
   padding: 10px 20px;
   border: none;
@@ -392,5 +502,12 @@ h1 {
 
 .confirm-booking-btn:hover {
   background-color: #8c5c4b;
+}
+
+.separator-line {
+  border: 0;
+  height: 1px;
+  background-color: #1d67a4; /* Màu xanh biển */
+  margin: 20px 0; /* Khoảng cách trên và dưới */
 }
 </style>
