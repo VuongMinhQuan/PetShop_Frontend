@@ -64,11 +64,35 @@
         </div>
       </div>
 
-      <div class="total-payment">
-        <h2>Tổng thanh toán:</h2>
-        <h2 class="total-payment-price">{{ formatCurrency(totalPrice) }}</h2>
+      <div class="payment-total-row">
+        <div class="payment-method">
+          <h2>Phương thức thanh toán:</h2>
+          <div class="checkbox-group">
+            <label>
+              <input
+                type="radio"
+                value="COD"
+                v-model="paymentMethod"
+                name="paymentMethod"
+              />
+              Thanh toán khi nhận hàng (COD)
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="VNPay"
+                v-model="paymentMethod"
+                name="paymentMethod"
+              />
+              Thanh toán bằng VNPay
+            </label>
+          </div>
+        </div>
+        <div class="total-payment">
+          <h2>Tổng thanh toán:</h2>
+          <h2 class="total-payment-price">{{ formatCurrency(totalPrice) }}</h2>
+        </div>
       </div>
-
       <!-- Nút Thanh Toán -->
       <div class="payment-btn">
         <button @click="handlePayment" class="confirm-booking-btn">
@@ -94,6 +118,7 @@ export default {
       totalPrice: 0, // Tổng giá tiền
       loading: true, // Trạng thái tải dữ liệu
       isEditing: false, // Trạng thái để hiển thị form chỉnh sửa
+      paymentMethod: "VNPay",
     };
   },
   computed: {
@@ -161,32 +186,45 @@ export default {
           CUSTOMER_ADDRESS: this.userInfo.ADDRESS,
         }));
         console.log("Dữ liệu gửi lên server:", productsDetails);
+
         // Gọi API bookProductNows để tạo booking
         const bookingResponse = await axiosClient.post(
           "/bookings/bookProductNows",
           {
             productsDetails,
+            paymentMethod: this.paymentMethod,
           }
         );
 
         if (bookingResponse.data.success) {
-          // Nếu booking thành công, tiếp tục tạo liên kết thanh toán VNPay
-          const paymentResponse = await axiosClient.post(
-            "/payments/create_payment_url",
-            {
-              id: bookingResponse.data.data._id,
-              totalPrice: this.totalPrice,
-            }
-          );
-
-          if (paymentResponse.data.statusCode === 200) {
-            // Redirect tới URL của VNPay để thanh toán
-            window.location.href = paymentResponse.data.data.url;
-          } else {
-            console.error(
-              "Tạo liên kết thanh toán thất bại:",
-              paymentResponse.data.msg
+          // Kiểm tra phương thức thanh toán
+          if (this.paymentMethod === "COD") {
+            // Nếu chọn COD, không cần gọi API VNPay, chỉ tạo booking
+            this.$toast.success(
+              "Đặt hàng thành công! Phương thức thanh toán COD."
             );
+            setTimeout(() => {
+              this.$router.push({ name: "History" });
+            }, 1000);
+          } else if (this.paymentMethod === "VNPay") {
+            // Nếu chọn VNPay, tiếp tục tạo liên kết thanh toán VNPay
+            const paymentResponse = await axiosClient.post(
+              "/payments/create_payment_url",
+              {
+                id: bookingResponse.data.data._id,
+                totalPrice: this.totalPrice,
+              }
+            );
+
+            if (paymentResponse.data.statusCode === 200) {
+              // Redirect tới URL của VNPay để thanh toán
+              window.location.href = paymentResponse.data.data.url;
+            } else {
+              console.error(
+                "Tạo liên kết thanh toán thất bại:",
+                paymentResponse.data.msg
+              );
+            }
           }
         }
       } catch (error) {
@@ -292,6 +330,13 @@ h1 {
 .quantity-value {
   padding: 0 30px;
 }
+
+.payment-total-row {
+  display: flex;
+  justify-content: space-between; /* Để canh đều các cột */
+  align-items: center; /* Đảm bảo các phần tử cùng hàng */
+  margin-top: 30px;
+}
 .total-payment {
   margin-top: 30px;
   font-size: 20px;
@@ -307,6 +352,29 @@ h1 {
   color: #0a6f90;
   padding-right: 20px;
 }
+
+.payment-method {
+  text-align: left; /* Canh lề trái */
+  padding-left: 20px; /* Khoảng cách từ lề trái */
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column; /* Sắp xếp theo cột */
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+.checkbox-group input[type="radio"] {
+  margin-right: 8px;
+}
+
 .payment-btn {
   text-align: center;
   margin-top: 20px;

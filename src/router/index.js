@@ -87,6 +87,7 @@ const routes = [
   },
   {
     path: "/user/history",
+    name: "History",
     component: History,
     meta: {
       layout: UserLayout,

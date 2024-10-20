@@ -17,11 +17,17 @@
               :class="{
                 'status-paid': booking.STATUS === 'Paid',
                 'status-unpaid': booking.STATUS === 'NotYetPaid',
+                'status-confirm': booking.STATUS === 'Confirm',
+                'status-canceled': booking.STATUS === 'Canceled',
               }"
             >
               {{
                 booking.STATUS === "Paid"
                   ? "Đã thanh toán"
+                  : booking.STATUS === "Confirm"
+                  ? "Đã xác nhận"
+                  : booking.STATUS === "Canceled"
+                  ? "Đã hủy"
                   : "Chưa thanh toán"
               }}
             </span>
@@ -83,19 +89,23 @@
 
       <!-- Pagination Controls -->
       <div class="pagination">
-        <button @click="prevPage" :disabled="currentPage === 1">Trang trước</button>
+        <button @click="prevPage" :disabled="currentPage === 1">
+          Trang trước
+        </button>
         <span>Trang {{ currentPage }} / {{ totalPages }}</span>
-        <button @click="nextPage" :disabled="currentPage === totalPages">Trang sau</button>
+        <button @click="nextPage" :disabled="currentPage === totalPages">
+          Trang sau
+        </button>
       </div>
     </div>
   </div>
 </template>
 
-
 <script>
 import axiosClient from "../../../api/axiosClient";
 
 export default {
+  name: "History",
   data() {
     return {
       bookings: [], // Chứa danh sách các booking
@@ -151,7 +161,6 @@ export default {
 };
 </script>
 
-
 <style scoped>
 .history-page {
   padding: 20px;
@@ -174,6 +183,16 @@ h2 {
 
 .status-unpaid {
   color: red; /* Màu đỏ cho trạng thái chưa thanh toán */
+  font-weight: bold;
+}
+
+.status-confirm {
+  color: rgb(6, 184, 89); /* Màu xanh cho trạng thái đã xác nhận */
+  font-weight: bold;
+}
+
+.status-canceled {
+  color: red; /* Màu đỏ cho trạng thái đã hủy */
   font-weight: bold;
 }
 
@@ -313,5 +332,4 @@ h2 {
 .pagination span {
   font-size: 1.2rem;
 }
-
 </style>

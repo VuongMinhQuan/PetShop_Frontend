@@ -7,7 +7,7 @@
       </span>
     </h1>
 
-    <div v-if="loading">Đang tải...</div>
+    <div v-if="loading">Giỏ hàng của bạn đang trống</div>
 
     <div v-if="!loading && cart.PRODUCTS && cart.PRODUCTS.length === 0">
       Giỏ hàng của bạn đang trống.
@@ -253,6 +253,7 @@ export default {
 <style scoped>
 .cart-page {
   max-width: 1600px;
+  min-height: 60vh; 
   margin: 0 auto;
   padding: 20px;
   background-color: #ffffff; /* Màu nền trắng */

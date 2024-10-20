@@ -238,7 +238,7 @@ export default {
     },
     formatPrice(price) {
       const formattedValue = parseFloat(price).toLocaleString("vi-VN");
-      return `${formattedValue}₫`; // Thêm đuôi ".000₫" cho mọi giá trị
+      return `${formattedValue}₫`;
     },
     async addToCart(product) {
       // Kiểm tra trạng thái đăng nhập từ computed isLogin
@@ -482,6 +482,7 @@ export default {
 }
 
 .accompanying-products-list {
+  transition: transform 0.5s ease; /* Hiệu ứng chuyển động mượt */
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
