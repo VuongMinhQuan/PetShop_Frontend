@@ -18,6 +18,7 @@
                 'status-paid': booking.STATUS === 'Paid',
                 'status-unpaid': booking.STATUS === 'NotYetPaid',
                 'status-confirm': booking.STATUS === 'Confirm',
+                'status-shipping': booking.STATUS === 'Shipping',
                 'status-canceled': booking.STATUS === 'Canceled',
               }"
             >
@@ -26,6 +27,8 @@
                   ? "Đã thanh toán"
                   : booking.STATUS === "Confirm"
                   ? "Đã xác nhận"
+                  : booking.STATUS === "Shipping"
+                  ? "Đang vận chuyển"
                   : booking.STATUS === "Canceled"
                   ? "Đã hủy"
                   : "Chưa thanh toán"
@@ -48,7 +51,7 @@
           <p>
             <i class="fas fa-location-dot"></i>
             Địa chỉ:
-            <span class="bold-text">{{ booking.CUSTOMER_ADDRESS }}</span>
+            <span class="bold-text">{{ booking.CUSTOMER_ADDRESS }}, {{ booking.WardName }}, {{booking.DistrictName }}, TP {{ booking.ProvinceName }}</span>
           </p>
         </div>
 
@@ -190,6 +193,13 @@ h2 {
   color: rgb(6, 184, 89); /* Màu xanh cho trạng thái đã xác nhận */
   font-weight: bold;
 }
+
+
+.status-shipping {
+  color: #fbc02d; /* Màu vàng cho trạng thái đang vận chuyển */
+  font-weight: bold;
+}
+
 
 .status-canceled {
   color: red; /* Màu đỏ cho trạng thái đã hủy */

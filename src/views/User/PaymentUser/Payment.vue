@@ -54,18 +54,6 @@
             <div class="address-row">
               <div class="address-column">
                 <p>
-                  <i class="fas fa-location-dot"></i>
-                  Địa chỉ:
-                  <input
-                    type="text"
-                    v-model="customerAddress"
-                    :placeholder="userInfo?.ADDRESS"
-                    class="input-field"
-                  />
-                </p>
-              </div>
-              <div class="address-column">
-                <p>
                   <i class="fa-solid fa-user"></i> Họ tên:
                   <input
                     type="text"
@@ -86,6 +74,67 @@
                   />
                 </p>
               </div>
+            </div>
+            <div class="address-column">
+                <p>
+                  <i class="fas fa-location-dot"></i>
+                  Tên đường:
+                  <input
+                    type="text"
+                    v-model="customerAddress"
+                    placeholder="Vui lòng nhập tên đường"
+                    class="input-field"
+                    required
+                  />
+                </p>
+              </div>
+            <!-- Select cho tỉnh -->
+            <div class="address-column">
+              <label for="province">Tỉnh:</label>
+              <select v-model="selectedProvince" @change="handleProvinceChange">
+                <option value="" disabled selected>Chọn tỉnh</option>
+                <option
+                  v-for="province in provinces"
+                  :key="province.ProvinceID"
+                  :value="province.ProvinceID"
+                >
+                  {{ province.ProvinceName }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Select cho huyện -->
+            <div class="address-column">
+              <label for="district">Huyện:</label>
+              <select
+                v-model="selectedDistrict"
+                @change="handleDistrictChange"
+                :disabled="!selectedProvince"
+              >
+                <option value="" disabled selected>Chọn huyện</option>
+                <option
+                  v-for="district in districts"
+                  :key="district.DistrictID"
+                  :value="district.DistrictID"
+                >
+                  {{ district.DistrictName }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Select cho xã -->
+            <div class="address-column">
+              <label for="ward">Xã:</label>
+              <select v-model="selectedWard" :disabled="!selectedDistrict">
+                <option value="" disabled selected>Chọn xã</option>
+                <option
+                  v-for="ward in wards"
+                  :key="ward.WardCode"
+                  :value="ward.WardCode"
+                >
+                  {{ ward.WardName }}
+                </option>
+              </select>
             </div>
           </div>
 
@@ -157,7 +206,13 @@ export default {
       paymentMethod: "VNPay",
       customerName: this.userInfo?.FULLNAME || "",
       customerPhone: this.userInfo?.PHONE_NUMBER || "",
-      customerAddress: this.userInfo?.ADDRESS || "",
+      customerAddress: "",
+      provinces: [], // Danh sách tỉnh
+      selectedProvince: null, // Province ID đã chọn
+      districts: [], // Danh sách huyện
+      selectedDistrict: null, // District ID đã chọn
+      wards: [], // Danh sách xã
+      selectedWard: null, // Ward Code đã chọn
     };
   },
   computed: {
@@ -169,9 +224,9 @@ export default {
   created() {
     this.customerName = this.userInfo?.FULLNAME || "";
     this.customerPhone = this.userInfo?.PHONE_NUMBER || "";
-    this.customerAddress = this.userInfo?.ADDRESS || "";
+    this.customerAddress = "";
     this.selectedProducts = this.$store.getters.getSelectedProductsCart;
-    console.log("Sản phẩm đã chọn trong BookingPage:", this.selectedProducts);
+    this.getProvinces();
     if (!this.selectedProducts || this.selectedProducts.length === 0) {
       this.$toast.error(
         "Không có sản phẩm nào được chọn. Vui lòng quay lại và chọn phòng."
@@ -190,6 +245,65 @@ export default {
   //   this.fetchSelectedProducts();
   // },
   methods: {
+    async getProvinces() {
+      try {
+        const response = await axiosClient.get(
+          "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province",
+          { headers: { token: "8dbe2a0f-8ec3-11ef-8e53-0a00184fe694" } }
+        );
+        this.provinces = response.data.data; // Lưu danh sách tỉnh
+      } catch (error) {
+        console.error("Error fetching provinces:", error);
+      }
+    },
+    async getDistricts(provinceId) {
+      try {
+        const response = await axiosClient.get(
+          `https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district?province_id=${provinceId}`,
+          {
+            headers: {
+              token: "8dbe2a0f-8ec3-11ef-8e53-0a00184fe694",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        this.districts = response.data.data; // Lưu danh sách huyện
+      } catch (error) {
+        console.error("Error fetching districts:", error);
+      }
+    },
+    async getWards(districtId) {
+      try {
+        const response = await axiosClient.post(
+          "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward",
+          {
+            district_id: districtId,
+          },
+          {
+            headers: {
+              token: "8dbe2a0f-8ec3-11ef-8e53-0a00184fe694",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        this.wards = response.data.data; // Lưu danh sách xã
+      } catch (error) {
+        console.error("Error fetching wards:", error);
+      }
+    },
+    handleProvinceChange() {
+      this.selectedDistrict = null; // Reset quận khi chọn tỉnh mới
+      this.wards = []; // Reset xã khi chọn tỉnh mới
+      if (this.selectedProvince) {
+        this.getDistricts(this.selectedProvince); // Gọi API để lấy huyện
+      }
+    },
+    handleDistrictChange() {
+      this.selectedWard = null; // Reset xã khi chọn huyện mới
+      if (this.selectedDistrict) {
+        this.getWards(this.selectedDistrict); // Gọi API để lấy xã
+      }
+    },
     getProductName(product) {
       return product.NAME || "Tên sản phẩm";
     },
@@ -218,13 +332,54 @@ export default {
         this.loading = false;
       }
     },
-    async getProvince(){
-       const province = await axiosClient.get(
-          "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province",
-          {headers: 'Token: 8dbe2a0f-8ec3-11ef-8e53-0a00184fe694'}
+    async getProvince() {
+      const province = await axiosClient.get(
+        "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province",
+        { headers: "Token: 8dbe2a0f-8ec3-11ef-8e53-0a00184fe694" }
+      );
+      console.log(province.data);
+    },
+    async getDistrict(provinceId) {
+      try {
+        const response = await axiosClient.get(
+          "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district",
+          {
+            headers: {
+              token: "8dbe2a0f-8ec3-11ef-8e53-0a00184fe694", // Cập nhật token
+              "Content-Type": "application/json",
+            },
+            data: {
+              province_id: provinceId, // Truyền province_id vào body
+            },
+          }
         );
-        console.log(province.data);
-        
+        console.log(response.data);
+        return response.data; // Nếu bạn muốn trả về dữ liệu
+      } catch (error) {
+        console.error("Error fetching district data:", error);
+        throw error; // Có thể ném lỗi để xử lý bên ngoài
+      }
+    },
+    async getWard(districtId) {
+      try {
+        const response = await axiosClient.post(
+          "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward",
+          {
+            district_id: districtId, // Truyền district_id vào body
+          },
+          {
+            headers: {
+              token: "8dbe2a0f-8ec3-11ef-8e53-0a00184fe694", // Cập nhật token
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log(response.data);
+        return response.data; // Nếu bạn muốn trả về dữ liệu
+      } catch (error) {
+        console.error("Error fetching ward data:", error);
+        throw error; // Có thể ném lỗi để xử lý bên ngoài
+      }
     },
     async handlePayment() {
       try {
@@ -234,6 +389,17 @@ export default {
           CUSTOMER_PHONE: this.customerPhone || this.userInfo.PHONE_NUMBER,
           CUSTOMER_NAME: this.customerName || this.userInfo.FULLNAME,
           CUSTOMER_ADDRESS: this.customerAddress || this.userInfo.ADDRESS,
+          ProvinceID: this.selectedProvince, // Lấy ID tỉnh từ select
+          ProvinceName: this.provinces.find(
+            (p) => p.ProvinceID === this.selectedProvince
+          )?.ProvinceName,
+          DistrictID: this.selectedDistrict, // Lấy ID huyện từ select
+          DistrictName: this.districts.find(
+            (d) => d.DistrictID === this.selectedDistrict
+          )?.DistrictName, // Tìm tên huyện
+          WardCode: this.selectedWard, // Lấy mã xã từ select
+          WardName: this.wards.find((w) => w.WardCode === this.selectedWard)
+            ?.WardName, // Tìm tên xã
         }));
         console.log("Dữ liệu gửi lên server:", productsDetails);
 
@@ -509,5 +675,26 @@ h1 {
   height: 1px;
   background-color: #1d67a4; /* Màu xanh biển */
   margin: 20px 0; /* Khoảng cách trên và dưới */
+}
+
+.address-column select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.address-column label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.address-column select:focus {
+  outline: none;
+  border-color: #1181a6; /* Màu viền khi select được focus */
+  box-shadow: 0 0 5px rgba(17, 129, 166, 0.5); /* Bóng đổ nhẹ khi focus */
 }
 </style>

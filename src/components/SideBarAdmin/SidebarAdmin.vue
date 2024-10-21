@@ -12,6 +12,11 @@
         </router-link>
       </li>
       <li>
+        <router-link to="/order">
+          <i class="fas fa-users"></i>Đơn hàng
+        </router-link>
+      </li>
+      <li>
         <router-link to="/revenue">
           <i class="fas fa-chart-line"></i>Doanh thu
         </router-link>

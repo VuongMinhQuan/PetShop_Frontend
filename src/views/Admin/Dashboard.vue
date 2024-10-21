@@ -87,6 +87,8 @@
                   ? "Chờ xác nhận"
                   : order.STATUS === "Confirm"
                   ? "Đã xác nhận"
+                  : order.STATUS === "Shipping"
+                  ? "Đang vận chuyển"
                   : order.STATUS === "Canceled"
                   ? "Đã hủy"
                   : ""
@@ -95,22 +97,47 @@
           </td>
 
           <td>
-            <button
-              class="approve-btn"
-              :disabled="order.STATUS !== 'NotYetPaid'"
-              :class="{ disabled: order.STATUS !== 'NotYetPaid' }"
-              @click="updateStatus(order.bookingId, 'Confirm')"
+            <!-- Hiển thị nút Duyệt và Hủy nếu trạng thái là 'NotYetPaid' -->
+            <div
+              v-if="
+                order.STATUS === 'NotYetPaid' || order.STATUS === 'Canceled'
+              "
             >
-              Duyệt
-            </button>
-            <button
-              class="cancel-btn"
-              :disabled="order.STATUS !== 'NotYetPaid'"
-              :class="{ disabled: order.STATUS !== 'NotYetPaid' }"
-              @click="updateStatus(order.bookingId, 'Canceled')"
-            >
-              Hủy
-            </button>
+              <button
+                class="approve-btn"
+                :class="{ disabled: order.STATUS === 'Canceled' }"
+                @click="
+                  order.STATUS !== 'Canceled'
+                    ? updateStatus(order.bookingId, 'Confirm')
+                    : null
+                "
+              >
+                Duyệt
+              </button>
+              <button
+                class="cancel-btn"
+                @click="
+                  order.STATUS === 'NotYetPaid'
+                    ? updateStatus(order.bookingId, 'Canceled')
+                    : null
+                "
+                :class="{ disabled: order.STATUS === 'Canceled' }"
+              >
+                Hủy
+              </button>
+            </div>
+
+            <!-- Chỉ hiển thị nút Vận chuyển nếu trạng thái là 'Paid' hoặc 'Confirm' -->
+            <div v-if="order.STATUS === 'Paid' || order.STATUS === 'Confirm'">
+              <button
+                v-if="order.STATUS !== 'Shipping'"
+                class="shipping-btn"
+                @click="handleShipping(order.bookingId)"
+              >
+                Vận chuyển
+              </button>
+              <span v-else class="Shipping">Đang vận chuyển</span>
+            </div>
           </td>
           <td>
             <button class="details-order" @click="openForm(order)">
@@ -145,7 +172,11 @@
         >,
         <span class="customer-phone">{{ selectedOrder.CUSTOMER_PHONE }}</span>
       </p>
-      <p><strong>Địa chỉ:</strong> {{ selectedOrder.CUSTOMER_ADDRESS }}</p>
+      <p>
+        <strong>Địa chỉ:</strong> {{ selectedOrder.CUSTOMER_ADDRESS }},
+        {{ selectedOrder.WardName }}, {{ selectedOrder.DistrictName }},
+        {{ selectedOrder.ProvinceName }}
+      </p>
       <hr class="separator-line" />
       <ul class="product-list">
         <li v-for="(product, index) in selectedOrder.LIST_PRODUCT" :key="index">
@@ -182,6 +213,56 @@
       </div>
     </div>
   </transition>
+
+  <!-- Form Vận Chuyển -->
+  <transition name="fade">
+    <div v-show="isShippingFormVisible" class="shipping-form-overlay">
+      <div class="shipping-form">
+        <h3>Thông tin Vận Chuyển</h3>
+        <form @submit.prevent="submitShipping">
+          <label for="weight">Trọng lượng:</label>
+          <input
+            type="number"
+            v-model="shippingInfo.weight"
+            id="weight"
+            required
+          />
+
+          <label for="length">Chiều dài:</label>
+          <input
+            type="number"
+            v-model="shippingInfo.length"
+            id="length"
+            required
+          />
+
+          <label for="width">Chiều rộng:</label>
+          <input
+            type="number"
+            v-model="shippingInfo.width"
+            id="width"
+            required
+          />
+
+          <label for="height">Chiều cao:</label>
+          <input
+            type="number"
+            v-model="shippingInfo.height"
+            id="height"
+            required
+          />
+
+          <label for="required_note">Ghi chú yêu cầu:</label>
+          <select v-model="shippingInfo.required_note" id="required_note">
+            <option value="CHOXEMHANGKHONGTHU">Cho xem hàng</option>
+            <option value="KHONGCHOXEMHANG">Không cho xem hàng</option>
+          </select>
+          <button type="submit">Xác nhận</button>
+          <button type="button" @click="closeShippingForm">Đóng</button>
+        </form>
+      </div>
+    </div>
+  </transition>
 </template>
 
 <script>
@@ -200,6 +281,14 @@ export default {
       isFormVisible: false, // Trạng thái mở/đóng form
       selectedOrder: {},
       overlayElement: null, // Để lưu trữ phần tử overlay
+      isShippingFormVisible: false, // Trạng thái hiển thị form
+      shippingInfo: {
+        weight: 1,
+        length: 1,
+        width: 1,
+        height: 1,
+        required_note: "",
+      },
     };
   },
   methods: {
@@ -329,6 +418,46 @@ export default {
       });
       setTimeout(() => done(), 500); // Chờ 0.5s để hoàn thành hiệu ứng trượt
     },
+    handleShipping(bookingId) {
+      this.selectedOrder.bookingId = bookingId;
+      this.isShippingFormVisible = true; // Hiển thị form khi nhấn nút Vận chuyển
+    },
+    closeShippingForm() {
+      this.isShippingFormVisible = false; // Đóng form
+      this.shippingInfo = {
+        // Reset dữ liệu khi đóng form
+        weight: 1,
+        length: 1,
+        width: 1,
+        height: 1,
+        required_note: "",
+      };
+    },
+    async submitShipping() {
+      try {
+        // console.log(this.selectedOrder.bookingId);
+        const response = await axiosClient.post("/bookings/shipping", {
+          bookingId: this.selectedOrder.bookingId, // Lấy bookingId từ đơn hàng được chọn
+          weight: this.shippingInfo.weight,
+          length: this.shippingInfo.length,
+          width: this.shippingInfo.width,
+          height: this.shippingInfo.height,
+          required_note: this.shippingInfo.required_note,
+        });
+
+        // Xử lý phản hồi từ server
+        if (response.data.success) {
+          this.$toast.success("Đã gửi thông tin vận chuyển thành công!"); // Hiển thị thông báo thành công
+          this.updateStatus(this.selectedOrder.bookingId, "Shipping");
+          this.closeShippingForm(); // Đóng form
+        } else {
+          this.$toast.error("Có lỗi xảy ra: " + response.data.msg); // Hiển thị thông báo lỗi
+        }
+      } catch (error) {
+        console.error("Error submitting shipping info:", error);
+        this.$toast.error("Đã xảy ra lỗi khi gửi thông tin vận chuyển."); // Hiển thị thông báo lỗi chung
+      }
+    },
   },
   created() {
     // Khi component được tạo, gọi hàm fetchAllBookings để lấy dữ liệu
@@ -424,7 +553,6 @@ export default {
   background-color: #fff; /* Màu nền cho select */
 }
 
-
 .total-price {
   font-size: 1.1rem;
   font-weight: bold;
@@ -516,6 +644,14 @@ export default {
 button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
+}
+
+.shipping-btn {
+  color: rgb(19, 177, 19);
+  padding: 5px 10px;
+  border: 1px solid rgb(19, 177, 19);
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 .details-order {
@@ -632,6 +768,57 @@ ul {
 .total-price-text {
   font-size: 20px;
   font-weight: bold;
+}
+.shipping-form-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.shipping-form {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.shipping-form h3 {
+  margin-bottom: 20px;
+}
+
+.shipping-form label {
+  display: block;
+  margin: 10px 0 5px;
+}
+
+.shipping-form input,
+.shipping-form select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.shipping-form button {
+  padding: 10px 15px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.Shipping {
+  border: 2px solid #fbc02d; /* Màu vàng cho đang vận chuyển */
+  color: #ffffff;
+  background-color: #fbc02d;
 }
 
 /* Responsive layout */

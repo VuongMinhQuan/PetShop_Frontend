@@ -18,6 +18,7 @@ import Favorite from '../views/User/FavoriteUser/Favorite.vue'
 import Profile from '../views/User/ProfileUser/Profile.vue'
 import Dashboard from '../views/Admin/Dashboard.vue'
 import ProductManager from  '../views/Admin/ProductManager.vue'
+import OrderManager from '../views/Admin/OrderManager/OrderManager.vue'
 
 const routes = [
   {
@@ -103,6 +104,13 @@ const routes = [
   {
     path: "/products",
     component: ProductManager,
+    meta: {
+      layout: AdminLayout,
+    },
+  },
+  {
+    path: "/order",
+    component: OrderManager,
     meta: {
       layout: AdminLayout,
     },
