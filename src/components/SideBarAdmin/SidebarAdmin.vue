@@ -13,7 +13,7 @@
       </li>
       <li>
         <router-link to="/order">
-          <i class="fas fa-users"></i>Đơn hàng
+          <i class="fa-regular fa-file"></i>Đơn hàng
         </router-link>
       </li>
       <li>

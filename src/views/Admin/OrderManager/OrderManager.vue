@@ -15,6 +15,8 @@
           <option value="NotYetPaid">Chờ xác nhận</option>
           <option value="Confirm">Đã xác nhận</option>
           <option value="Canceled">Đã hủy</option>
+          <option value="Shipping">Đang vận chuyển</option>
+          <option value="Complete">Hoàn thành</option>
         </select>
       </div>
     </div>
@@ -25,7 +27,13 @@
           <th>Tên khách hàng</th>
           <th>Số điện thoại</th>
           <th>Ngày đặt</th>
-          <th>Tổng giá (VND)</th>
+          <th>
+            Tổng giá (VND)
+            <button class="sort-button" @click="sortOrdersByPrice">
+              <i class="fa-solid fa-sort"></i>
+            </button>
+          </th>
+
           <th>Phương thức thanh toán</th>
           <th>Trạng thái thanh toán</th>
           <th>Hành động</th>
@@ -35,8 +43,8 @@
       <tbody>
         <tr v-for="(order, index) in filteredOrders" :key="index">
           <td>#{{ index + 1 }}</td>
-          <td>{{ order.USER_INFO.FULLNAME }}</td>
-          <td>{{ order.USER_INFO.PHONE_NUMBER }}</td>
+          <td>{{ order.CUSTOMER_NAME }}</td>
+          <td>{{ order.CUSTOMER_PHONE }}</td>
           <td>{{ formatDate(order.createdAt) }}</td>
           <td class="total-price">
             {{ order.TOTAL_PRICE.toLocaleString("vi-VN") }} ₫
@@ -53,6 +61,8 @@
                   ? "Đã xác nhận"
                   : order.STATUS === "Shipping"
                   ? "Đang vận chuyển"
+                  : order.STATUS === "Complete"
+                  ? "Hoàn thành"
                   : order.STATUS === "Canceled"
                   ? "Đã hủy"
                   : ""
@@ -236,9 +246,6 @@ export default {
   name: "Dashboard",
   data() {
     return {
-      totalUser: 10,
-      totalProduct: 120,
-      totalOrder: 50,
       orders: [], // Mảng lưu trữ danh sách đơn hàng
       filteredOrders: [], // Mảng lưu trữ danh sách đơn hàng đã lọc
       selectedStatus: "", // Trạng thái đã chọn để lọc
@@ -246,6 +253,7 @@ export default {
       selectedOrder: {},
       overlayElement: null, // Để lưu trữ phần tử overlay
       isShippingFormVisible: false, // Trạng thái hiển thị form
+      sortOrder: 0,
       shippingInfo: {
         weight: 1,
         length: 1,
@@ -422,6 +430,19 @@ export default {
         this.$toast.error("Đã xảy ra lỗi khi gửi thông tin vận chuyển."); // Hiển thị thông báo lỗi chung
       }
     },
+    sortOrdersByPrice() {
+      console.log("Clicked to sort by price");
+      if (this.sortOrder === 0) {
+        this.sortOrder = 1; // Đổi sang giảm dần
+        this.filteredOrders.sort((a, b) => b.TOTAL_PRICE - a.TOTAL_PRICE);
+      } else if (this.sortOrder === 1) {
+        this.sortOrder = -1; // Đổi sang tăng dần
+        this.filteredOrders.sort((a, b) => a.TOTAL_PRICE - b.TOTAL_PRICE);
+      } else {
+        this.sortOrder = 0; // Trở lại mặc định
+        this.filteredOrders = [...this.orders]; // Sao chép từ orders ban đầu
+      }
+    },
   },
   created() {
     // Khi component được tạo, gọi hàm fetchAllBookings để lấy dữ liệu
@@ -556,20 +577,21 @@ export default {
 }
 
 .Paid {
-  border: 2px solid #4caf50; /* Màu xanh cho đã thanh toán */
-  color: #e7ebe7;
   background-color: #4caf50;
+  color: #ffffff;
+  border: 2px solid #4caf50;
 }
 
 .Confirm {
-  border: 2px solid rgb(20, 193, 215); /* Màu xanh cho đã thanh toán */
-  color: #e7ebe7;
-  background-color: rgb(20, 193, 215);
+  background-color: #2196f3;
+  color: #ffffff;
+  border: 2px solid #2196f3;
 }
 
 .NotYetPaid {
-  border: 2px solid #e57373; /* Màu đỏ cho chưa thanh toán */
-  color: #e57373;
+  background-color: #f44336;
+  color: #ffffff;
+  border: 2px solid #f44336;
 }
 
 .Canceled {
@@ -783,6 +805,38 @@ ul {
   border: 2px solid #fbc02d; /* Màu vàng cho đang vận chuyển */
   color: #ffffff;
   background-color: #fbc02d;
+}
+
+.Complete {
+  border: 2px solid #4caf50; /* Màu xanh cho hoàn thành */
+  color: #ffffff;
+  background-color: #4caf50;
+}
+
+.complete-btn {
+  background-color: #4caf50; /* Nền xanh lá */
+  color: white; /* Chữ trắng */
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.complete-btn:hover {
+  background-color: #388e3c; /* Màu xanh đậm khi hover */
+}
+
+.sort-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+
+.fa-sort {
+  cursor: pointer; /* Thêm con trỏ chuột */
 }
 
 /* Responsive layout */

@@ -20,6 +20,7 @@
                 'status-confirm': booking.STATUS === 'Confirm',
                 'status-shipping': booking.STATUS === 'Shipping',
                 'status-canceled': booking.STATUS === 'Canceled',
+                'status-complete': booking.STATUS === 'Complete',
               }"
             >
               {{
@@ -29,6 +30,8 @@
                   ? "Đã xác nhận"
                   : booking.STATUS === "Shipping"
                   ? "Đang vận chuyển"
+                  : booking.STATUS === "Complete"
+                  ? "Hoàn thành"
                   : booking.STATUS === "Canceled"
                   ? "Đã hủy"
                   : "Chưa thanh toán"
@@ -87,6 +90,13 @@
             <strong>Tổng tiền đơn hàng:</strong>
             {{ formatPrice(booking.TOTAL_PRICE) }} đ
           </p>
+          <button
+            v-if="booking.STATUS === 'Shipping'"
+            @click="markAsComplete(booking._id)"
+            class="complete-button"
+          >
+            Đã nhận được hàng
+          </button>
         </div>
       </div>
 
@@ -160,6 +170,25 @@ export default {
         this.currentPage++;
       }
     },
+    async markAsComplete(bookingId) {
+      try {
+        await axiosClient.put(`/bookings/updateStatus`, {
+          bookingId,
+          status: "Complete",
+        });
+        this.$toast.success("Đơn hàng đã được cập nhật thành Hoàn thành", {
+          position: "top-right",
+          duration: 3000,
+        });
+        await this.fetchBooking(); // Cập nhật lại danh sách đơn hàng sau khi cập nhật trạng thái
+      } catch (error) {
+        console.error("Error updating booking status:", error);
+        this.$toast.error("Lỗi khi cập nhật trạng thái đơn hàng", {
+          position: "top-right",
+          duration: 3000,
+        });
+      }
+    },
   },
 };
 </script>
@@ -200,11 +229,16 @@ h2 {
   font-weight: bold;
 }
 
+.status-complete {
+  color: #13d249; /* Màu vàng cho trạng thái đang vận chuyển */
+  font-weight: bold;
+}
 
 .status-canceled {
   color: red; /* Màu đỏ cho trạng thái đã hủy */
   font-weight: bold;
 }
+
 
 .no-bookings {
   text-align: center;
@@ -302,11 +336,13 @@ h2 {
 }
 
 .total-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 20px;
   font-size: 1.2rem;
   font-weight: bold;
   color: #3ba8cd;
-  text-align: right;
   border-top: 1px solid #ddd;
   padding-top: 10px;
 }
@@ -341,5 +377,21 @@ h2 {
 
 .pagination span {
   font-size: 1.2rem;
+}
+
+.complete-button {
+  background-color: #4caf50; /* Màu xanh lá cây */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.complete-button:hover {
+  background-color: #388e3c; /* Màu xanh lá cây đậm hơn khi hover */
 }
 </style>

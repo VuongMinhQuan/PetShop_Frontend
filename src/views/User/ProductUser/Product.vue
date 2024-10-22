@@ -177,6 +177,13 @@ export default {
       } else if (direction === "next" && this.currentPage < this.totalPages) {
         this.currentPage++;
       }
+      this.scrollToTop();
+    },
+    scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth", // Cuộn mượt mà
+      });
     },
     formatPrice(price) {
       const formattedValue = parseFloat(price).toLocaleString("vi-VN");
@@ -547,6 +554,41 @@ export default {
 
 .red-heart {
   color: red;
+}
+
+.pagination {
+  display: flex; /* Sử dụng Flexbox để căn giữa */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  justify-content: center; /* Căn giữa theo chiều ngang */
+  margin-top: 20px; /* Thêm khoảng cách trên cùng */
+  gap: 10px; /* Khoảng cách giữa các nút */
+}
+
+.pagination button {
+  background-color: #3ba8cd; /* Màu nền chính */
+  color: white; /* Màu chữ trắng */
+  border: none; /* Xóa viền nút */
+  border-radius: 5px; /* Bo góc nút */
+  padding: 8px 16px; /* Khoảng cách bên trong nút */
+  font-size: 16px; /* Kích thước chữ */
+  cursor: pointer; /* Con trỏ thành nút bấm */
+  transition: background-color 0.3s, transform 0.2s; /* Thêm hiệu ứng chuyển đổi */
+}
+
+.pagination button:hover {
+  background-color: #2a88a2; /* Màu khi hover */
+  transform: translateY(-2px); /* Hiệu ứng nhấn nổi */
+}
+
+.pagination button:disabled {
+  background-color: #a3d4e4; /* Màu xám nhạt khi nút bị vô hiệu hóa */
+  cursor: not-allowed; /* Con trỏ không cho phép bấm */
+}
+
+.pagination span {
+  font-size: 16px; /* Kích thước chữ của số trang */
+  color: #3ba8cd; /* Màu chữ chính */
+  font-weight: bold; /* Chữ đậm */
 }
 
 /* Media queries */

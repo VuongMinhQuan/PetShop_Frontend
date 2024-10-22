@@ -90,7 +90,7 @@
               </div>
             <!-- Select cho tỉnh -->
             <div class="address-column">
-              <label for="province">Tỉnh:</label>
+              <label for="province">Tỉnh/Thành phố:</label>
               <select v-model="selectedProvince" @change="handleProvinceChange">
                 <option value="" disabled selected>Chọn tỉnh</option>
                 <option
@@ -105,7 +105,7 @@
 
             <!-- Select cho huyện -->
             <div class="address-column">
-              <label for="district">Huyện:</label>
+              <label for="district">Quận/Huyện:</label>
               <select
                 v-model="selectedDistrict"
                 @change="handleDistrictChange"
@@ -124,7 +124,7 @@
 
             <!-- Select cho xã -->
             <div class="address-column">
-              <label for="ward">Xã:</label>
+              <label for="ward">Phường/Xã:</label>
               <select v-model="selectedWard" :disabled="!selectedDistrict">
                 <option value="" disabled selected>Chọn xã</option>
                 <option

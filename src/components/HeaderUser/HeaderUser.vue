@@ -47,7 +47,7 @@
                     userInfo?.FULLNAME || "User"
                   }}</span>
                   <div v-if="isUserMenuOpen" class="user-menu">
-                    <a class="user-menu-item" href="">
+                    <a class="user-menu-item" href="/user/profile">
                       <i class="fas fa-user"></i> Hồ sơ
                     </a>
                     <a class="user-menu-item" href="/user/favorite">

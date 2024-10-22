@@ -199,8 +199,16 @@ export default {
       }
     },
     resetImageFields() {
-      this.newImageURL = ""; // Reset trường nhập URL khi thay đổi nguồn hình ảnh
-      this.newProduct.IMAGES = []; // Reset hình ảnh khi đổi nguồn
+      if (this.imageSource === "file") {
+        // Nếu chọn nguồn file, chỉ reset trường URL
+        this.newImageURLs = "";
+      } else if (this.imageSource === "url") {
+        // Nếu chọn nguồn URL, giữ lại các URL hiện có trong newImageURLs
+        const urlImages = this.newProduct.IMAGES.filter(
+          (img) => typeof img === "string" && img.startsWith("http")
+        );
+        this.newImageURLs = urlImages.join(", "); // Hiển thị các URL ảnh hiện có
+      }
     },
     addImageURL() {
       // Tách chuỗi URL thành mảng bằng dấu phẩy
@@ -208,6 +216,9 @@ export default {
         .split(",")
         .map((url) => url.trim())
         .filter((url) => url !== ""); // Loại bỏ khoảng trắng và các URL rỗng
+      this.newProduct.IMAGES = this.newProduct.IMAGES.filter(
+        (img) => typeof img !== "string" || !img.startsWith("http")
+      );
 
       // Lặp qua từng URL và kiểm tra tính hợp lệ
       urls.forEach((url) => {
@@ -229,6 +240,11 @@ export default {
       this.editProductId = product._id;
       this.newProduct = { ...product };
       this.availableSubTypes = this.getSubTypes(product.TYPE.mainType);
+      // Lấy danh sách các URL ảnh từ IMAGES của sản phẩm và nối thành chuỗi
+      const urlImages = this.newProduct.IMAGES.filter(
+        (img) => typeof img === "string" && img.startsWith("http")
+      );
+      this.newImageURLs = urlImages.join(", ");
       this.showModal = true;
     },
     async createProduct() {
@@ -269,13 +285,26 @@ export default {
         formData.append("QUANTITY", this.newProduct.QUANTITY);
         formData.append("DESCRIPTION", this.newProduct.DESCRIPTION);
 
-        // Xử lý ảnh (cả file upload và URL)
+        if (this.imageSource === "url" && this.newImageURLs) {
+          const urls = this.newImageURLs
+            .split(",")
+            .map((url) => url.trim())
+            .filter((url) => url !== ""); // Loại bỏ các URL rỗng
+          this.newProduct.IMAGES = this.newProduct.IMAGES.filter(
+            (img) => typeof img !== "string" || !img.startsWith("http")
+          );
+
+          // Giữ ảnh cũ và thêm ảnh mới từ URL
+          this.newProduct.IMAGES = [...this.newProduct.IMAGES, ...urls];
+        }
+
+        // Thêm tất cả ảnh (bao gồm cả ảnh cũ và mới) vào FormData
         this.newProduct.IMAGES.forEach((image) => {
           if (typeof image === "string" && image.startsWith("http")) {
-            // Nếu là URL thì giữ nguyên
+            // Nếu là URL
             formData.append("IMAGES[]", image);
           } else {
-            // Nếu là file upload từ máy, thêm vào formData
+            // Nếu là file
             formData.append("IMAGES[]", image);
           }
         });
