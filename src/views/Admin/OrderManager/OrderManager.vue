@@ -41,8 +41,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(order, index) in filteredOrders" :key="index">
-          <td>#{{ index + 1 }}</td>
+        <tr v-for="(order, index) in getPaginatedOrders()" :key="index">
+          <td>#{{ index + 1 + (currentPage - 1) * ordersPerPage }}</td>
           <td>{{ order.CUSTOMER_NAME }}</td>
           <td>{{ order.CUSTOMER_PHONE }}</td>
           <td>{{ formatDate(order.createdAt) }}</td>
@@ -122,6 +122,17 @@
       </tbody>
     </table>
   </div>
+
+  <div class="pagination">
+  <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1">
+    Trước
+  </button>
+  <span>Trang {{ currentPage }} / {{ totalPages }}</span>
+  <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages">
+    Sau
+  </button>
+</div>
+
   <transition name="fade">
     <div v-show="isFormVisible"></div>
   </transition>
@@ -249,6 +260,9 @@ export default {
       orders: [], // Mảng lưu trữ danh sách đơn hàng
       filteredOrders: [], // Mảng lưu trữ danh sách đơn hàng đã lọc
       selectedStatus: "", // Trạng thái đã chọn để lọc
+      currentPage: 1, // Trang hiện tại
+      ordersPerPage: 10, // Số đơn hàng mỗi trang
+      totalPages: 0, // Tổng số trang
       isFormVisible: false, // Trạng thái mở/đóng form
       selectedOrder: {},
       overlayElement: null, // Để lưu trữ phần tử overlay
@@ -264,6 +278,26 @@ export default {
     };
   },
   methods: {
+    calculateTotalPages() {
+      this.totalPages = Math.ceil(
+        this.filteredOrders.length / this.ordersPerPage
+      );
+    },
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+      }
+    },
+    getPaginatedOrders() {
+      const start = (this.currentPage - 1) * this.ordersPerPage;
+      let end = this.currentPage * this.ordersPerPage;
+
+      if (end > this.filteredOrders.length) {
+        end = this.filteredOrders.length;
+      }
+
+      return this.filteredOrders.slice(start, end);
+    },
     async fetchAllBookings() {
       try {
         // Gọi API lấy tất cả các booking
@@ -271,6 +305,7 @@ export default {
         if (response.data.success) {
           this.orders = response.data.data; // Gán dữ liệu từ API vào orders
           this.filteredOrders = this.orders;
+          this.calculateTotalPages();
         }
       } catch (error) {
         console.error("Error fetching bookings:", error);
@@ -284,6 +319,7 @@ export default {
       } else {
         this.filteredOrders = this.orders; // Hiển thị tất cả nếu không có trạng thái nào được chọn
       }
+      this.calculateTotalPages();
     },
     formatPrice(price) {
       const formattedValue = parseFloat(price).toLocaleString("vi-VN");
@@ -827,17 +863,45 @@ ul {
   background-color: #388e3c; /* Màu xanh đậm khi hover */
 }
 
-.sort-button {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-
 .fa-sort {
   cursor: pointer; /* Thêm con trỏ chuột */
 }
+
+.pagination {
+  display: flex; /* Sử dụng Flexbox để căn giữa */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  justify-content: center; /* Căn giữa theo chiều ngang */
+  margin-top: 20px; /* Thêm khoảng cách trên cùng */
+  gap: 10px; /* Khoảng cách giữa các nút */
+}
+
+.pagination button {
+  background-color: #3ba8cd; /* Màu nền chính */
+  color: white; /* Màu chữ trắng */
+  border: none; /* Xóa viền nút */
+  border-radius: 5px; /* Bo góc nút */
+  padding: 8px 16px; /* Khoảng cách bên trong nút */
+  font-size: 16px; /* Kích thước chữ */
+  cursor: pointer; /* Con trỏ thành nút bấm */
+  transition: background-color 0.3s, transform 0.2s; /* Thêm hiệu ứng chuyển đổi */
+}
+
+.pagination button:hover {
+  background-color: #2a88a2; /* Màu khi hover */
+  transform: translateY(-2px); /* Hiệu ứng nhấn nổi */
+}
+
+.pagination button:disabled {
+  background-color: #a3d4e4; /* Màu xám nhạt khi nút bị vô hiệu hóa */
+  cursor: not-allowed; /* Con trỏ không cho phép bấm */
+}
+
+.pagination span {
+  font-size: 16px; /* Kích thước chữ của số trang */
+  color: #3ba8cd; /* Màu chữ chính */
+  font-weight: bold; /* Chữ đậm */
+}
+
 
 /* Responsive layout */
 @media (max-width: 768px) {

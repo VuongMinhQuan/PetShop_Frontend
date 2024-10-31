@@ -54,7 +54,10 @@
           <p>
             <i class="fas fa-location-dot"></i>
             Địa chỉ:
-            <span class="bold-text">{{ booking.CUSTOMER_ADDRESS }}, {{ booking.WardName }}, {{booking.DistrictName }}, TP {{ booking.ProvinceName }}</span>
+            <span class="bold-text"
+              >{{ booking.CUSTOMER_ADDRESS }}, {{ booking.WardName }},
+              {{ booking.DistrictName }}, TP {{ booking.ProvinceName }}</span
+            >
           </p>
         </div>
 
@@ -82,6 +85,15 @@
             <div class="total-price-product">
               Thành tiền: {{ formatPrice(product.TOTAL_PRICE_PRODUCT) }} đ
             </div>
+            <div class="review-action">
+              <button
+                v-if="booking.STATUS === 'Complete'"
+                @click="openReviewForm(booking._id, product.PRODUCT_ID._id)"
+                class="review-button"
+              >
+                Viết đánh giá
+              </button>
+            </div>
           </div>
         </div>
 
@@ -90,13 +102,52 @@
             <strong>Tổng tiền đơn hàng:</strong>
             {{ formatPrice(booking.TOTAL_PRICE) }} đ
           </p>
-          <button
-            v-if="booking.STATUS === 'Shipping'"
-            @click="markAsComplete(booking._id)"
-            class="complete-button"
+          <div
+            v-if="
+              booking.STATUS === 'Shipping' || booking.STATUS === 'Complete'
+            "
           >
-            Đã nhận được hàng
-          </button>
+            <button
+              v-if="booking.STATUS === 'Shipping'"
+              @click="markAsComplete(booking._id)"
+              class="complete-button"
+            >
+              Đã nhận được hàng
+            </button>
+          </div>
+          <!-- Form Viết Đánh Giá với Overlay -->
+          <div v-if="isReviewFormVisible[booking._id]" class="overlay">
+            <div class="review-form">
+              <h3>Viết đánh giá</h3>
+              <div class="star-rating">
+                <span
+                  v-for="star in 5"
+                  :key="star"
+                  class="star"
+                  :class="{ active: star <= rating }"
+                  @click="setRating(star)"
+                >
+                  &#9733;
+                </span>
+              </div>
+              <textarea
+                v-model="comment"
+                placeholder="Nhập nhận xét của bạn..."
+                class="comment-input"
+              ></textarea>
+              <div class="form-actions">
+                <button @click="submitReview" class="submit-button">
+                  Gửi đánh giá
+                </button>
+                <button
+                  @click="closeReviewForm(booking._id)"
+                  class="cancel-button"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -124,6 +175,10 @@ export default {
       bookings: [], // Chứa danh sách các booking
       currentPage: 1, // Trang hiện tại
       itemsPerPage: 5, // Số đơn hàng trên mỗi trang
+      isReviewFormVisible: [], // Chuyển thành mảng
+      selectedBooking: null, // Đơn hàng được chọn để viết đánh giá
+      rating: 0,
+      comment: "",
     };
   },
   computed: {
@@ -145,10 +200,127 @@ export default {
     async fetchBooking() {
       try {
         const response = await axiosClient.post("/bookings/getBookingByUserId");
-        this.bookings = response.data.data; // Gán dữ liệu booking vào biến bookings
+        this.bookings = response.data.data.map((booking) => {
+          return {
+            ...booking,
+            LIST_PRODUCT: booking.LIST_PRODUCT.map((product) => ({
+              ...product,
+              isReviewed: false, // Mặc định là false
+              review: null,
+            })),
+          };
+        });
       } catch (error) {
         console.error("Error fetching bookings:", error);
         this.$toast.error("Lỗi khi tải dữ liệu đơn hàng", {
+          position: "top-right",
+          duration: 3000,
+        });
+      }
+    },
+    async fetchReviewsForProducts() {
+      try {
+        const userId = this.$store.state.userId; // Lấy ID người dùng từ store hoặc bất kỳ nguồn nào khác
+
+        // Duyệt qua từng booking và sản phẩm trong booking
+        for (const booking of this.bookings) {
+          for (const product of booking.LIST_PRODUCT) {
+            // Gọi API để lấy đánh giá cho sản phẩm
+            const response = await axiosClient.post(
+              `/reviews/getReviewByUserAndProduct`,
+              {
+                userId: userId,
+                productId: product.PRODUCT_ID._id, // Sử dụng ID sản phẩm
+              }
+            );
+
+            if (response.data.success) {
+              product.isReviewed = true; // Đánh dấu là đã đánh giá
+              product.review = response.data.data; // Lưu thông tin đánh giá
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+        this.$toast.error("Lỗi khi tải dữ liệu đánh giá", {
+          position: "top-right",
+          duration: 3000,
+        });
+      }
+    },
+    openReviewForm(bookingId, productId) {
+      this.selectedBooking = this.bookings.find(
+        (booking) => booking._id === bookingId
+      );
+      this.selectedProductId = productId; // Lưu id sản phẩm
+      this.isReviewFormVisible[bookingId] = true; // Mở form đánh giá cho booking cụ thể
+
+      // Gọi API để lấy thông tin đánh giá cho sản phẩm cụ thể này
+      axiosClient
+        .post("/reviews/getReviewByUserAndProduct", {
+          userId: this.selectedBooking.USER_ID,
+          productId: this.selectedProductId,
+          bookingId: bookingId,
+        })
+        .then((response) => {
+          if (response.data.success) {
+            const review = response.data.data;
+            this.rating = review.RATING; // Lấy rating đã lưu
+            this.comment = review.COMMENT; // Lấy comment đã lưu
+          } else {
+            // Nếu không có đánh giá, reset lại các giá trị
+            this.rating = 0;
+            this.comment = "";
+          }
+        })
+        .catch((error) => {
+          console.error("Lỗi khi lấy thông tin đánh giá:", error);
+          if (error.response && error.response.status === 404) {
+            // Nếu không tìm thấy đánh giá, thiết lập mặc định
+            this.rating = 0;
+            this.comment = "";
+          } else {
+            // Xử lý lỗi khác nếu cần
+            this.$toast.error("Lỗi khi tải dữ liệu đánh giá", {
+              position: "top-right",
+              duration: 3000,
+            });
+          }
+        });
+    },
+    closeReviewForm(bookingId) {
+      this.isReviewFormVisible[bookingId] = false; // Đóng form đánh giá cho booking cụ thể
+      this.rating = 0;
+      this.comment = "";
+    },
+    setRating(star) {
+      this.rating = star;
+    },
+    async submitReview() {
+      if (!this.comment || this.rating === 0) {
+        alert("Vui lòng nhập đầy đủ đánh giá và chọn số sao!");
+        return;
+      }
+      const reviewData = {
+        userId: this.selectedBooking.USER_ID,
+        bookingId: this.selectedBooking._id,
+        productId: this.selectedProductId, // Sử dụng id sản phẩm đã chọn
+        rating: this.rating,
+        comment: this.comment,
+      };
+      try {
+        await axiosClient.post(
+          "http://localhost:3000/reviews/addReview",
+          reviewData
+        );
+        this.$toast.success("Đánh giá của bạn đã được gửi!", {
+          position: "top-right",
+          duration: 3000,
+        });
+        this.closeReviewForm(this.selectedBooking._id);
+      } catch (error) {
+        console.error("Error submitting review:", error);
+        this.$toast.error("Lỗi khi gửi đánh giá", {
           position: "top-right",
           duration: 3000,
         });
@@ -180,7 +352,7 @@ export default {
           position: "top-right",
           duration: 3000,
         });
-        await this.fetchBooking(); // Cập nhật lại danh sách đơn hàng sau khi cập nhật trạng thái
+        await this.fetchBooking();
       } catch (error) {
         console.error("Error updating booking status:", error);
         this.$toast.error("Lỗi khi cập nhật trạng thái đơn hàng", {
@@ -223,7 +395,6 @@ h2 {
   font-weight: bold;
 }
 
-
 .status-shipping {
   color: #fbc02d; /* Màu vàng cho trạng thái đang vận chuyển */
   font-weight: bold;
@@ -238,7 +409,6 @@ h2 {
   color: red; /* Màu đỏ cho trạng thái đã hủy */
   font-weight: bold;
 }
-
 
 .no-bookings {
   text-align: center;
@@ -313,7 +483,12 @@ h2 {
 .product-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  background-color: #f9f9f9;
 }
 
 .product-image {
@@ -334,7 +509,9 @@ h2 {
   font-size: 1rem;
   color: #333;
 }
-
+.review-action {
+  text-align: center; /* Căn giữa nút */
+}
 .total-price {
   display: flex;
   justify-content: space-between;
@@ -393,5 +570,129 @@ h2 {
 
 .complete-button:hover {
   background-color: #388e3c; /* Màu xanh lá cây đậm hơn khi hover */
+}
+
+.review-button {
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  margin-left: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.review-button:hover {
+  background-color: #e68900;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  animation: fadeIn 0.3s forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.review-form {
+  background-color: white;
+  padding: 20px 30px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform: scale(0.9);
+  animation: scaleIn 0.3s forwards;
+}
+
+@keyframes scaleIn {
+  to {
+    transform: scale(1);
+  }
+}
+
+.star-rating {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.star {
+  font-size: 2rem;
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.star.active {
+  color: #ffc107;
+}
+
+.comment-input {
+  width: 100%;
+  height: 80px;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: none;
+}
+
+.comment-input:focus {
+  outline: none;
+  border-color: #3ba8cd;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.submit-button {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.2s;
+  flex: 1;
+}
+
+.cancel-button {
+  background-color: #f44336;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.2s;
+  flex: 1;
+}
+
+.submit-button:hover {
+  background-color: #388e3c;
+}
+
+.cancel-button:hover {
+  background-color: #d32f2f;
 }
 </style>

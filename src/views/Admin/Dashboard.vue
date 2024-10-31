@@ -42,9 +42,9 @@ export default {
   name: "Dashboard",
   data() {
     return {
-      totalUser: 10,
-      totalProduct: 120,
-      totalOrder: 50,
+      totalUser: 0,
+      totalProduct: 0,
+      totalOrder: 0,
     };
   },
 };
