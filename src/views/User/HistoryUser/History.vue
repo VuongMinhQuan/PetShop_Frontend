@@ -102,6 +102,14 @@
             <strong>Tổng tiền đơn hàng:</strong>
             {{ formatPrice(booking.TOTAL_PRICE) }} đ
           </p>
+          <div v-if="booking.STATUS === 'NotYetPaid'">
+            <button
+              @click="cancelOrder(booking._id)"
+              class="cancel-order-button"
+            >
+              Hủy đơn hàng
+            </button>
+          </div>
           <div
             v-if="
               booking.STATUS === 'Shipping' || booking.STATUS === 'Complete'
@@ -356,6 +364,25 @@ export default {
       } catch (error) {
         console.error("Error updating booking status:", error);
         this.$toast.error("Lỗi khi cập nhật trạng thái đơn hàng", {
+          position: "top-right",
+          duration: 3000,
+        });
+      }
+    },
+    async cancelOrder(bookingId) {
+      try {
+        await axiosClient.put(`/bookings/updateStatus`, {
+          bookingId,
+          status: "Canceled",
+        });
+        this.$toast.success("Đơn hàng đã được hủy thành công", {
+          position: "top-right",
+          duration: 3000,
+        });
+        await this.fetchBooking(); // Cập nhật lại danh sách đơn hàng
+      } catch (error) {
+        console.error("Error canceling order:", error);
+        this.$toast.error("Lỗi khi hủy đơn hàng", {
           position: "top-right",
           duration: 3000,
         });
@@ -694,5 +721,21 @@ h2 {
 
 .cancel-button:hover {
   background-color: #d32f2f;
+}
+
+.cancel-order-button {
+  background-color: #f44336; /* Màu đỏ */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.cancel-order-button:hover {
+  background-color: #d32f2f; /* Màu đỏ đậm hơn khi hover */
 }
 </style>

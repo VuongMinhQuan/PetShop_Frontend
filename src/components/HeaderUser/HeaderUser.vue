@@ -67,7 +67,7 @@
               </template>
 
               <template v-else>
-                <a class="btn auth-btn login-btn" href="/user/login"
+                <a class="btn auth-btn login-btn" href="/login"
                   >Đăng nhập</a
                 >
                 <a class="btn auth-btn register-btn" href="/user/register"
@@ -107,7 +107,7 @@ export default {
     async logout() {
       try {
         await this.$store.dispatch("logout"); // Xử lý đăng xuất trong Vuex
-        this.$router.push("/user/login"); // Chuyển hướng đến trang đăng nhập
+        this.$router.push("/login"); // Chuyển hướng đến trang đăng nhập
       } catch (error) {
         console.error("Logout error:", error);
       }

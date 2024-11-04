@@ -13,7 +13,7 @@
                         Hãy đến với Passages, bạn sẽ có được kiến thức, kinh
                         nghiệm và trải nghiệm.
                       </p>
-                      <router-link to="/user/login" class="button btn-login">
+                      <router-link to="/login" class="button btn-login">
                         <span>LOGIN</span>
                       </router-link>
                     </div>

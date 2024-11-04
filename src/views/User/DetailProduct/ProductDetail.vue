@@ -63,74 +63,128 @@
         </div>
       </div>
 
-      <!-- Hiển thị danh sách sản phẩm đi kèm -->
-      <div class="accompanying-products" v-if="accompanyingProducts.length > 0">
-        <h3>Sản phẩm đi kèm</h3>
-        <div class="product-slider">
+      <!-- Phần tabs để hiển thị các nội dung khác nhau -->
+      <div class="tab-section">
+        <div class="tabs">
           <button
-            @click="prevPage"
-            class="slider-button prev-button"
-            :disabled="currentPage === 0"
+            v-for="(tab, index) in tabs"
+            :key="index"
+            :class="{ active: activeTab === tab }"
+            @click="activeTab = tab"
           >
-            <i class="fa fa-chevron-left"></i>
-          </button>
-          <div class="accompanying-products-list">
-            <div
-              v-for="(accompanyingProduct, index) in paginatedProducts"
-              :key="accompanyingProduct._id"
-              class="accompanying-product-card"
-              @click="goToProductDetail(accompanyingProduct._id)"
-            >
-              <img
-                :src="accompanyingProduct.IMAGES[0] || '@/assets/banner.jpg'"
-                :alt="accompanyingProduct.NAME"
-                class="accompanying-product-image"
-              />
-              <h4>{{ accompanyingProduct.NAME }}</h4>
-              <p>{{ formatPrice(accompanyingProduct.PRICE) }}</p>
-
-              <!-- Nút thêm vào giỏ hàng -->
-              <button
-                class="buy-button"
-                @click.stop="addToCart(accompanyingProduct)"
-              >
-                <font-awesome-icon icon="cart-plus" /> Thêm vào giỏ hàng
-              </button>
-            </div>
-          </div>
-
-          <!-- Nút chuyển sang sản phẩm tiếp theo -->
-          <button
-            @click="nextPage"
-            class="slider-button next-button"
-            :disabled="currentPage === maxPage"
-          >
-            <i class="fa fa-chevron-right"></i>
+            {{ tab }}
           </button>
         </div>
-      </div>
 
-      <div class="product-description">
-        <h3>Mô tả sản phẩm</h3>
-        <p>{{ product.DESCRIPTION }}</p>
-      </div>
+        <div
+          v-if="activeTab === 'Sản phẩm đi kèm'"
+          class="accompanying-products"
+        >
+          <h3>Sản phẩm đi kèm</h3>
 
-      <div class="related-products" v-if="relatedProducts.length > 0">
-        <h3>Xem thêm các sản phẩm tương tự</h3>
-        <div class="related-products-list">
-          <div
-            v-for="relatedProduct in relatedProducts"
-            :key="relatedProduct._id"
-            class="related-product-card"
-            @click="goToProductDetail(relatedProduct._id)"
-          >
-            <img
-              :src="relatedProduct.IMAGES[0] || '@/assets/banner.jpg'"
-              :alt="relatedProduct.NAME"
-              class="related-product-image"
-            />
-            <h4>{{ relatedProduct.NAME }}</h4>
-            <p>{{ formatPrice(relatedProduct.PRICE) }}</p>
+          <!-- Hiển thị thông báo nếu không có sản phẩm đi kèm -->
+          <div v-if="accompanyingProducts.length === 0">
+            Không có sản phẩm đi kèm.
+          </div>
+
+          <!-- Hiển thị danh sách sản phẩm đi kèm nếu có -->
+          <div v-else class="product-slider">
+            <button
+              @click="prevPage"
+              class="slider-button prev-button"
+              :disabled="currentPage === 0"
+            >
+              <i class="fa fa-chevron-left"></i>
+            </button>
+            <div class="accompanying-products-list">
+              <div
+                v-for="(accompanyingProduct, index) in paginatedProducts"
+                :key="accompanyingProduct._id"
+                class="accompanying-product-card"
+                @click="goToProductDetail(accompanyingProduct._id)"
+              >
+                <img
+                  :src="accompanyingProduct.IMAGES[0] || '@/assets/banner.jpg'"
+                  :alt="accompanyingProduct.NAME"
+                  class="accompanying-product-image"
+                />
+                <h4>{{ accompanyingProduct.NAME }}</h4>
+                <p>{{ formatPrice(accompanyingProduct.PRICE) }}</p>
+                <button
+                  class="buy-button"
+                  @click.stop="addToCart(accompanyingProduct)"
+                >
+                  <font-awesome-icon icon="cart-plus" /> Thêm vào giỏ hàng
+                </button>
+              </div>
+            </div>
+            <button
+              @click="nextPage"
+              class="slider-button next-button"
+              :disabled="currentPage === maxPage"
+            >
+              <i class="fa fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="activeTab === 'Mô tả sản phẩm'" class="product-description">
+          <h3>Mô tả sản phẩm</h3>
+          <p>{{ product.DESCRIPTION }}</p>
+        </div>
+
+        <div
+          v-if="
+            activeTab === 'Các sản phẩm tương tự'
+          "
+          class="related-products"
+        >
+          <h3>Các sản phẩm tương tự</h3>
+          <div v-if="relatedProducts.length === 0">
+            Không có các sản phẩm tương tự cho sản phẩm này.
+          </div>
+          <div v-else class="related-products-list">
+            <div
+              v-for="relatedProduct in relatedProducts"
+              :key="relatedProduct._id"
+              class="related-product-card"
+              @click="goToProductDetail(relatedProduct._id)"
+            >
+              <img
+                :src="relatedProduct.IMAGES[0] || '@/assets/banner.jpg'"
+                :alt="relatedProduct.NAME"
+                class="related-product-image"
+              />
+              <h4>{{ relatedProduct.NAME }}</h4>
+              <p>{{ formatPrice(relatedProduct.PRICE) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phần Đánh giá -->
+        <div v-if="activeTab === 'Đánh giá'" class="reviews">
+          <h3>Đánh giá</h3>
+          <div v-if="Array.isArray(reviews) && reviews.length === 0">
+            Chưa có đánh giá nào.
+          </div>
+          <div v-else>
+            <div v-for="review in reviews" :key="review._id" class="review">
+              <p>
+                <strong>{{ review.USER_ID.FULLNAME }}</strong>
+              </p>
+              <div class="rating-stars">
+                <span
+                  v-for="n in 5"
+                  :key="n"
+                  :class="{ filled: n <= review.RATING }"
+                  class="star"
+                >
+                  ★
+                </span>
+                <span class="rating-text">({{ review.RATING }} / 5)</span>
+              </div>
+              <p>{{ review.COMMENT }}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -148,9 +202,17 @@ export default {
       mainImage: "", // Ảnh chính được hiển thị
       relatedProducts: [],
       accompanyingProducts: [],
+      reviews: [],
       isLoading: false,
       currentPage: 0, // Quản lý trang hiện tại của slider
       itemsPerPage: 4, // Số sản phẩm hiển thị trên mỗi trang
+      activeTab: "Sản phẩm đi kèm", // Tab đang được chọn
+      tabs: [
+        "Sản phẩm đi kèm",
+        "Mô tả sản phẩm",
+        "Các sản phẩm tương tự",
+        "Đánh giá",
+      ],
     };
   },
   computed: {
@@ -198,6 +260,7 @@ export default {
 
         this.fetchRelatedProducts();
         this.fetchAccompanyingProducts();
+        this.fetchReviews();
       } catch (error) {
         console.error("Error fetching product details:", error);
       } finally {
@@ -234,6 +297,19 @@ export default {
         );
       } catch (error) {
         console.error("Error fetching accompanying products:", error);
+      }
+    },
+    async fetchReviews() {
+      try {
+        const productId = this.$route.params.id;
+        const response = await axiosClient.get(
+          `/reviews/getReviewsByProductId/${productId}`
+        );
+        if (response.data.success) {
+          this.reviews = response.data.data;
+        }
+      } catch (error) {
+        console.error("Lỗi lấy đánh giá:", error);
       }
     },
     formatPrice(price) {
@@ -709,5 +785,57 @@ li {
   font-weight: bold;
   color: #333;
   margin-bottom: 10px;
+}
+
+.reviews {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-top: 1px solid #ddd;
+}
+.review {
+  margin-bottom: 15px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  background-color: #ffffff;
+}
+.review p {
+  margin: 0;
+}
+.review strong {
+  font-weight: bold;
+}
+.rating-stars {
+  font-size: 18px;
+  color: #ccc; /* Màu mặc định của ngôi sao */
+}
+
+.star.filled {
+  color: #fbc02d; /* Màu vàng cho ngôi sao đã được đánh giá */
+}
+
+.rating-text {
+  margin-left: 5px;
+  font-size: 14px;
+  color: #333;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.tabs button {
+  padding: 10px 20px;
+  background-color: #f5f5f5;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tabs button.active {
+  background-color: #3ba8cd;
+  color: white;
 }
 </style>

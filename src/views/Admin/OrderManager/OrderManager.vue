@@ -304,6 +304,7 @@ export default {
         const response = await axiosClient.get("/bookings/getAllBookings");
         if (response.data.success) {
           this.orders = response.data.data; // Gán dữ liệu từ API vào orders
+          this.orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           this.filteredOrders = this.orders;
           this.calculateTotalPages();
         }
@@ -560,7 +561,11 @@ export default {
   align-items: center; /* Căn giữa theo chiều dọc */
   margin-bottom: 20px; /* Khoảng cách dưới để tách khỏi bảng */
 }
-
+.table-header h2{
+  margin: 0;
+  font-size: 2.8rem;
+  color: #176ba3;
+}
 .filter-container {
   display: flex; /* Sử dụng Flexbox để căn chỉnh nội dung */
   align-items: center; /* Căn giữa theo chiều dọc */

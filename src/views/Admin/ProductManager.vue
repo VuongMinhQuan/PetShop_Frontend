@@ -1,9 +1,18 @@
 <template>
   <div class="header">
     <h2>Danh sách sản phẩm</h2>
-    <a-button type="primary" @click="showModal = true">
-      <i class="fa-solid fa-plus"></i> Thêm sản phẩm
-    </a-button>
+    <div class="header-actions">
+      <input
+        type="text"
+        v-model="searchQuery"
+        placeholder="Tìm kiếm sản phẩm..."
+        @keyup.enter="filterProducts"
+        class="search-input"
+      />
+      <button @click="showModal = true" class="add-product-btn">
+        <i class="fa-solid fa-plus"></i> Thêm sản phẩm
+      </button>
+    </div>
   </div>
 
   <!-- Modal thêm sản phẩm -->
@@ -104,7 +113,7 @@
               :key="index"
               :value="subType"
             >
-              {{ subType }}
+              {{ subTypeLabels[subType] || subType }}
             </option>
           </select>
         </div>
@@ -124,7 +133,7 @@
 
   <div class="product-grid">
     <div
-      v-for="(product, index) in products"
+      v-for="(product, index) in filteredProducts"
       :key="product._id"
       class="product-card"
     >
@@ -133,7 +142,7 @@
       </div>
       <div class="product-info">
         <h3>{{ product.NAME }}</h3>
-        <p>Giá: {{ product.PRICE }} VND</p>
+        <p>Giá: {{ formatPrice(product.PRICE) }} VND</p>
         <p>Số lượng: {{ product.QUANTITY }}</p>
         <div class="action-buttons">
           <button class="edit-btn" @click="openEditProductModal(product)">
@@ -156,6 +165,8 @@ export default {
   data() {
     return {
       products: [],
+      searchQuery: "", // Biến lưu trữ từ khóa tìm kiếm
+      filteredProducts: [],
       showModal: false,
       isEditing: false,
       editProductId: null,
@@ -173,6 +184,13 @@ export default {
       newImageURL: "", // Thêm biến để lưu URL hình ảnh
       availableSubTypes: [], // Danh sách subTypes khả dụng
       imageSource: "", // Thêm biến để theo dõi nguồn hình ảnh
+      subTypeLabels: {
+        FDog: "Thức ăn cho chó",
+        FCat: "Thức ăn cho mèo",
+        Toy: "Đồ chơi",
+        Bag: "Ba lô",
+        Cage: "Chuồng",
+      },
     };
   },
   async mounted() {
@@ -185,8 +203,20 @@ export default {
         this.products = response.data.sort((a, b) =>
           a.NAME.localeCompare(b.NAME)
         );
+        this.filteredProducts = this.products;
       } catch (error) {
         console.error("Error fetching products:", error);
+      }
+    },
+    filterProducts() {
+      if (this.searchQuery.trim() === "") {
+        // Nếu từ khóa trống, hiển thị tất cả sản phẩm
+        this.filteredProducts = this.products;
+      } else {
+        // Lọc sản phẩm dựa trên từ khóa
+        this.filteredProducts = this.products.filter((product) =>
+          product.NAME.toLowerCase().includes(this.searchQuery.toLowerCase())
+        );
       }
     },
     handleFileUpload(event) {
@@ -384,12 +414,15 @@ export default {
             "Sphynx",
           ];
         case "Foods":
-          return ["FDog", "FCat", "Toy"];
+          return ["FDog", "FCat"];
         case "Products":
           return ["Toy", "Bag", "Cage"];
         default:
           return [];
       }
+    },
+    formatPrice(price) {
+      return parseFloat(price).toLocaleString("vi-VN"); // Định dạng thành chuỗi theo chuẩn VN
     },
   },
 };
@@ -495,20 +528,40 @@ export default {
   color: #176ba3;
 }
 
-.add-product-btn {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
+.header-actions {
+  display: flex;
+  gap: 10px; /* Khoảng cách giữa thanh tìm kiếm và nút */
+}
+
+.search-input {
+  padding: 8px;
   font-size: 1rem;
-  transition: background-color 0.3s ease;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+  width: 250px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: #3dafd5;
+  box-shadow: 0 0 8px #25809f;
+}
+
+.add-product-btn {
+  background-color: #358ece; /* Màu xanh biển */
+  color: #ffffff; /* Chữ trắng */
+  border: none; /* Loại bỏ viền */
+  padding: 10px 20px; /* Khoảng cách padding */
+  border-radius: 5px; /* Bo góc nhẹ */
+  cursor: pointer; /* Con trỏ chuột */
+  font-weight: bold; /* Chữ đậm */
+  font-size: 1rem; /* Kích thước chữ */
+  transition: background-color 0.3s ease; /* Hiệu ứng chuyển màu */
 }
 
 .add-product-btn:hover {
-  background-color: #45a049;
+  background-color: #2a88a2; /* Màu xanh đậm hơn khi hover */
 }
 
 .product-grid {

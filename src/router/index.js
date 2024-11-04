@@ -19,10 +19,13 @@ import Profile from '../views/User/ProfileUser/Profile.vue'
 import Dashboard from '../views/Admin/Dashboard.vue'
 import ProductManager from  '../views/Admin/ProductManager.vue'
 import OrderManager from '../views/Admin/OrderManager/OrderManager.vue'
+import UserManager from '../views/Admin/UserManager/UserManager.vue'
+import Chat from "../components/Chat/Chat.vue";
+
 
 const routes = [
   {
-    path: "/user/login",
+    path: "/login",
     component: Login,
     meta: {
       layout: LoginLayout,
@@ -95,6 +98,13 @@ const routes = [
     },
   },
   {
+    path: "/chat",
+    component: Chat,
+    meta: {
+      layout: AdminLayout,
+    },
+  },
+  {
     path: "/dashboard",
     component: Dashboard,
     meta: {
@@ -111,6 +121,13 @@ const routes = [
   {
     path: "/order",
     component: OrderManager,
+    meta: {
+      layout: AdminLayout,
+    },
+  },
+  {
+    path: "/users",
+    component: UserManager,
     meta: {
       layout: AdminLayout,
     },
