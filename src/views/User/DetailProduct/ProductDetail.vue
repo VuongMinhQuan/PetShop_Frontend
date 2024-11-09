@@ -51,15 +51,15 @@
               <li>Đường dây <span class="highlight">hỗ trợ 24/7</span></li>
               <li><span class="highlight">Freeship</span> toàn quốc</li>
             </ul>
+            <button
+              class="add-to-cart"
+              @click="addToCart(product)"
+              :disabled="product.QUANTITY === 0"
+              :class="{ 'disabled-button': product.QUANTITY === 0 }"
+            >
+              <i class="fa fa-cart-plus"></i> Thêm vào giỏ hàng
+            </button>
           </div>
-          <button
-            class="add-to-cart"
-            @click="addToCart(product)"
-            :disabled="product.QUANTITY === 0"
-            :class="{ 'disabled-button': product.QUANTITY === 0 }"
-          >
-            <i class="fa fa-cart-plus"></i> Thêm vào giỏ hàng
-          </button>
         </div>
       </div>
 
@@ -134,9 +134,7 @@
         </div>
 
         <div
-          v-if="
-            activeTab === 'Các sản phẩm tương tự'
-          "
+          v-if="activeTab === 'Các sản phẩm tương tự'"
           class="related-products"
         >
           <h3>Các sản phẩm tương tự</h3>
@@ -164,26 +162,145 @@
         <!-- Phần Đánh giá -->
         <div v-if="activeTab === 'Đánh giá'" class="reviews">
           <h3>Đánh giá</h3>
-          <div v-if="Array.isArray(reviews) && reviews.length === 0">
-            Chưa có đánh giá nào.
+
+          <!-- Tabs trong phần Đánh giá -->
+          <div class="review-tabs">
+            <button
+              v-for="reviewTab in reviewTabs"
+              :key="reviewTab"
+              :class="{ active: activeReviewTab === reviewTab }"
+              @click="
+                activeReviewTab = reviewTab;
+                if (reviewTab === 'Đánh giá của bạn') fetchUserReview();
+              "
+            >
+              {{ reviewTab }}
+            </button>
           </div>
-          <div v-else>
-            <div v-for="review in reviews" :key="review._id" class="review">
-              <p>
-                <strong>{{ review.USER_ID.FULLNAME }}</strong>
-              </p>
-              <div class="rating-stars">
+
+          <!-- Nội dung của tab Tất cả đánh giá -->
+          <div v-if="activeReviewTab === 'Tất cả đánh giá'">
+            <div v-if="Array.isArray(reviews) && reviews.length === 0">
+              Chưa có đánh giá nào.
+            </div>
+            <div v-else class="average-rating-section">
+              <h3>Đánh giá của người mua</h3>
+              <div class="average-rating">
                 <span
+                  class="star"
                   v-for="n in 5"
                   :key="n"
-                  :class="{ filled: n <= review.RATING }"
+                  :class="{ filled: n <= Math.round(averageRating) }"
+                  >★</span
+                >
+                <span class="average-text"
+                  >Dựa trên {{ reviews.length }} đánh giá</span
+                >
+              </div>
+
+              <div class="rating-distribution">
+                <div
+                  v-for="star in [5, 4, 3, 2, 1]"
+                  :key="star"
+                  class="distribution-row"
+                >
+                  <span>{{ star }}</span>
+                  <div class="bar">
+                    <div
+                      class="filled-bar"
+                      :style="{ width: `${ratingPercentages[star]}%` }"
+                    ></div>
+                  </div>
+                  <span>{{ ratingPercentages[star] }}%</span>
+                </div>
+              </div>
+
+              <div v-for="review in reviews" :key="review._id" class="review">
+                <p>
+                  <strong>{{ review.USER_ID.FULLNAME }}</strong>
+                </p>
+                <div class="rating-stars">
+                  <span
+                    v-for="n in 5"
+                    :key="n"
+                    :class="{ filled: n <= review.RATING }"
+                    class="star"
+                    >★</span
+                  >
+                  <span class="rating-text">({{ review.RATING }} / 5)</span>
+                </div>
+                <p>{{ review.COMMENT }}</p>
+              </div>
+            </div>
+          </div>
+          <div v-if="activeReviewTab === 'Đánh giá của bạn'">
+            <div v-if="userReviews && userReviews.length > 0">
+              <div
+                v-for="userReview in userReviews"
+                :key="userReview._id"
+                class="review"
+              >
+                <p>
+                  <strong>{{ userReview.USER_ID.FULLNAME }}</strong>
+                </p>
+                <div class="rating-stars">
+                  <span
+                    v-for="n in 5"
+                    :key="n"
+                    :class="{ filled: n <= userReview.RATING }"
+                    class="star"
+                    >★</span
+                  >
+                  <span class="rating-text">({{ userReview.RATING }} / 5)</span>
+                </div>
+                <div class="review-content">
+                  <p>{{ userReview.COMMENT }}</p>
+                  <div class="review-actions">
+                    <button
+                      @click="openEditModal(userReview)"
+                      class="edit-button"
+                    >
+                      <i class="fa-solid fa-pen-to-square edit-icon"></i> Sửa
+                    </button>
+                    <button
+                      @click="deleteReview(userReview._id)"
+                      class="delete-button"
+                    >
+                      <i class="fa-solid fa-trash delete-icon"></i> Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else>Bạn chưa có đánh giá nào cho sản phẩm này.</div>
+          </div>
+          <div v-if="isEditModalVisible" class="overlay">
+            <div class="review-form">
+              <h3>Chỉnh sửa đánh giá</h3>
+              <div class="star-rating">
+                <span
+                  v-for="star in 5"
+                  :key="star"
                   class="star"
+                  :class="{ active: star <= rating }"
+                  @click="setRating(star)"
                 >
                   ★
                 </span>
-                <span class="rating-text">({{ review.RATING }} / 5)</span>
               </div>
-              <p>{{ review.COMMENT }}</p>
+              <textarea
+                v-model="comment"
+                placeholder="Nhập nhận xét của bạn..."
+                class="comment-input"
+              ></textarea>
+              <div class="form-actions">
+                <button @click="submitEditedReview" class="submit-button">
+                  Cập nhật đánh giá
+                </button>
+                <button @click="closeEditModal" class="cancel-button">
+                  Hủy
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -202,10 +319,17 @@ export default {
       mainImage: "", // Ảnh chính được hiển thị
       relatedProducts: [],
       accompanyingProducts: [],
-      reviews: [],
+      reviews: [], // Danh sách đánh giá
+      userReviews: [],
+      averageRating: 0, // Đánh giá trung bình
+      ratingPercentages: {}, // Phần trăm phân bố đánh giá
       isLoading: false,
       currentPage: 0, // Quản lý trang hiện tại của slider
       itemsPerPage: 4, // Số sản phẩm hiển thị trên mỗi trang
+      isEditModalVisible: false, // Kiểm soát hiển thị modal chỉnh sửa
+      selectedReview: null, // Đánh giá được chọn để chỉnh sửa
+      rating: 0,
+      comment: "",
       activeTab: "Sản phẩm đi kèm", // Tab đang được chọn
       tabs: [
         "Sản phẩm đi kèm",
@@ -213,6 +337,8 @@ export default {
         "Các sản phẩm tương tự",
         "Đánh giá",
       ],
+      reviewTabs: ["Tất cả đánh giá", "Đánh giá của bạn"], // Tabs trong phần Đánh giá
+      activeReviewTab: "Tất cả đánh giá",
     };
   },
   computed: {
@@ -239,6 +365,21 @@ export default {
     },
   },
   methods: {
+    openEditModal(review) {
+      this.selectedReview = review;
+      this.rating = review.RATING;
+      this.comment = review.COMMENT;
+      this.isEditModalVisible = true;
+    },
+    closeEditModal() {
+      this.isEditModalVisible = false;
+      this.rating = 0;
+      this.comment = "";
+      this.selectedReview = null;
+    },
+    setRating(star) {
+      this.rating = star; // Cập nhật số sao khi người dùng chọn
+    },
     prevPage() {
       if (this.currentPage > 0) {
         this.currentPage--;
@@ -247,6 +388,42 @@ export default {
     nextPage() {
       if (this.currentPage < this.maxPage) {
         this.currentPage++;
+      }
+    },
+    async submitEditedReview() {
+      console.log("Submitting review with rating:", this.rating);
+      if (!this.comment || this.rating === 0) {
+        alert("Vui lòng nhập đầy đủ đánh giá và chọn số sao!");
+        return;
+      }
+
+      const reviewData = {
+        rating: this.rating,
+        comment: this.comment,
+      };
+
+      try {
+        await axiosClient.put(
+          `/reviews/updateReview/${this.selectedReview._id}`,
+          reviewData
+        );
+
+        this.$toast.success("Đánh giá của bạn đã được cập nhật!", {
+          position: "top-right",
+          duration: 3000,
+        });
+
+        // Cập nhật lại dữ liệu đánh giá
+        this.fetchUserReview();
+        this.fetchReviews();
+
+        this.closeEditModal();
+      } catch (error) {
+        console.error("Error updating review:", error);
+        this.$toast.error("Lỗi khi cập nhật đánh giá", {
+          position: "top-right",
+          duration: 3000,
+        });
       }
     },
     async fetchProductDetail() {
@@ -306,10 +483,88 @@ export default {
           `/reviews/getReviewsByProductId/${productId}`
         );
         if (response.data.success) {
-          this.reviews = response.data.data;
+          this.reviews = response.data.data.filter((review) => review.STATUS);
+          this.calculateAverageRating();
         }
       } catch (error) {
         console.error("Lỗi lấy đánh giá:", error);
+      }
+    },
+    async fetchUserReview() {
+      try {
+        const productId = this.$route.params.id;
+        const response = await axiosClient.get(
+          `/reviews/getReviewsByProductId/${productId}`
+        );
+        console.log("Response Data:", response.data.data);
+
+        if (response.data.success) {
+          const token = localStorage.getItem("accessToken");
+          if (token) {
+            const userPayload = JSON.parse(atob(token.split(".")[1]));
+            const userId = userPayload.userId || userPayload.id;
+
+            // Lọc tất cả đánh giá của người dùng
+            this.userReviews = response.data.data.filter(
+              (review) =>
+                review.USER_ID._id === userId && review.STATUS === true
+            );
+
+            console.log("User Reviews:", this.userReviews);
+
+            // Kiểm tra nếu không có đánh giá phù hợp
+            if (this.userReviews.length === 0) {
+              console.log("Không tìm thấy đánh giá của người dùng này.");
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi lấy đánh giá của bạn:", error);
+      }
+    },
+    async deleteReview(reviewId) {
+      try {
+        const response = await axiosClient.delete(
+          `/reviews/deleteReview/${reviewId}`
+        );
+        if (response.data.success) {
+          this.$toast.success("Xóa đánh giá thành công!", {
+            position: "top-right",
+            duration: 3000,
+          });
+          // Cập nhật lại danh sách đánh giá sau khi xóa
+          this.fetchUserReview();
+        } else {
+          this.$toast.error(response.data.msg, {
+            position: "top-right",
+            duration: 3000,
+          });
+        }
+      } catch (error) {
+        console.error("Lỗi khi xóa đánh giá:", error);
+        this.$toast.error("Có lỗi xảy ra khi xóa đánh giá", {
+          position: "top-right",
+          duration: 3000,
+        });
+      }
+    },
+    calculateAverageRating() {
+      let totalRating = 0;
+      let ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+      this.reviews.forEach((review) => {
+        totalRating += review.RATING;
+        ratingCounts[review.RATING]++;
+      });
+
+      this.averageRating = (totalRating / this.reviews.length).toFixed(1);
+
+      // Tính phần trăm cho mỗi mức đánh giá
+      for (let i = 1; i <= 5; i++) {
+        this.ratingPercentages[i] = (
+          (ratingCounts[i] / this.reviews.length) *
+          100
+        ).toFixed(0);
       }
     },
     formatPrice(price) {
@@ -317,7 +572,6 @@ export default {
       return `${formattedValue}₫`;
     },
     async addToCart(product) {
-      // Kiểm tra trạng thái đăng nhập từ computed isLogin
       if (!this.isLogin) {
         this.$toast.warning(
           "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.",
@@ -326,30 +580,26 @@ export default {
             duration: 3000,
           }
         );
-        return; // Ngăn không cho thực hiện hành động nếu chưa đăng nhập
+        return;
       }
-
       try {
         const response = await axiosClient.put("/carts/addProduct", {
           productId: product._id,
-          quantity: 1, // Số lượng sản phẩm muốn thêm, mặc định là 1
+          quantity: 1,
         });
 
         if (response.data.success) {
-          // Hiển thị thông báo thành công
           this.$toast.success("Đã thêm sản phẩm vào giỏ hàng.", {
             position: "top-right",
             duration: 3000,
           });
         } else {
-          // Nếu có lỗi, hiển thị thông báo lỗi
           this.$toast.error(response.data.message, {
             position: "top-right",
             duration: 3000,
           });
         }
       } catch (error) {
-        // Xử lý lỗi nếu có
         if (error.response && error.response.data.message) {
           this.$toast.error(error.response.data.message, {
             position: "top-right",
@@ -371,471 +621,6 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.product-detail-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 130px;
-  background-color: #f5f5f5;
-}
-
-.spinner-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid #f3f3f3; /* Màu xám nhạt cho viền ngoài */
-  border-top: 5px solid #3ba8cd; /* Màu xanh cho phần xoay */
-  border-radius: 50%;
-  animation: spin 1s linear infinite; /* Hiệu ứng xoay */
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.product-detail {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  background-color: #ffffff;
-  padding: 20px 120px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.main-image img {
-  width: 400px;
-  height: 400px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.image-thumbnails {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.image-thumbnails img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  cursor: pointer;
-  border: 2px solid transparent;
-  border-radius: 4px;
-}
-
-.image-thumbnails img.active {
-  border-color: #3ba8cd;
-}
-
-.product-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* Đẩy nội dung giữa tiêu đề và nút xuống cuối */
-  height: 400px; /* Chiều cao của thẻ sản phẩm, điều chỉnh theo ý muốn */
-}
-
-.product-info h1 {
-  font-weight: bold;
-  font-size: 28px;
-  color: #333;
-}
-
-.product-price {
-  font-size: 24px;
-  color: #de2b28;
-  margin: 10px 0;
-}
-.product-price .label {
-  font-weight: bold; /* Làm đậm chữ */
-  font-size: 20px; /* Tăng kích thước chữ (nếu cần) */
-  color: #de2b28; /* Màu chữ (có thể tùy chỉnh theo ý muốn) */
-}
-.quantity {
-  font-size: 18px;
-  color: #333;
-  margin-left: 10px;
-}
-
-.out-of-stock {
-  background-color: red;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-weight: bold;
-  font-size: 14px;
-  text-align: center;
-  display: inline-block;
-  margin-top: 10px;
-}
-
-.in-stock {
-  background-color: green;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-weight: bold;
-  font-size: 14px;
-  text-align: center;
-  display: inline-block;
-  margin-top: 10px;
-}
-
-.product-description {
-  margin: 20px 0;
-  padding: 0 120px;
-}
-
-.highlight {
-  color: #3ba8cd; /* Màu xanh biển */
-  font-weight: bold; /* In đậm chữ */
-}
-
-.add-to-cart {
-  align-self: flex-start; /* Canh giữa theo chiều ngang */
-  padding: 10px 20px;
-  background-color: #3ba8cd;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: auto; /* Đẩy nút xuống cuối */
-}
-
-.add-to-cart i {
-  margin-right: 5px;
-}
-
-.add-to-cart:disabled {
-  background-color: #ccc; /* Màu nền khi bị vô hiệu hóa */
-  cursor: not-allowed; /* Con trỏ không cho phép */
-  color: #666; /* Màu chữ mờ hơn */
-}
-
-.disabled-button {
-  opacity: 0.6; /* Làm mờ nút khi bị vô hiệu hóa */
-}
-
-.product-extra-info {
-  display: flex;
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.accompanying-products {
-  margin-top: 20px; /* Khoảng cách với phần trên */
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-top: 1px solid #ddd;
-  width: 100%;
-}
-
-.accompanying-products h3 {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.accompanying-products-list {
-  transition: transform 0.5s ease; /* Hiệu ứng chuyển động mượt */
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-}
-
-.accompanying-product-card {
-  width: calc(25% - 20px); /* Hiển thị 4 sản phẩm trên một hàng */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-sizing: border-box;
-  margin: 0;
-  text-align: center;
-  border: 1px solid #8d8686;
-  border-radius: 0px;
-  padding: 10px;
-  background-color: #fff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.accompanying-product-card:hover {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  transform: translateY(-5px);
-}
-
-.accompanying-product-image {
-  width: 150px;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 10px;
-  transition: transform 0.3s ease;
-  margin: 0 auto;
-}
-
-.accompanying-product-image:hover {
-  transform: scale(1.07);
-}
-
-.accompanying-product-card h4 {
-  margin: 10px 0;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-}
-
-.accompanying-product-card p {
-  font-size: 1rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 10px;
-}
-.product-slider {
-  position: relative;
-  /* display: flex;
-  align-items: center; */
-}
-
-/* CSS cho nút Next */
-.slider-button.next-button {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  background-color: #3ba8cd;
-  color: #fff;
-  border: none;
-  padding: 10px;
-  font-size: 1.5rem;
-  cursor: pointer;
-  border-radius: 50%;
-  transform: translateY(-50%); /* Canh giữa theo chiều dọc */
-}
-
-/* CSS cho nút Prev */
-.slider-button.prev-button {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  background-color: #3ba8cd;
-  color: #fff;
-  border: none;
-  padding: 10px;
-  font-size: 1.5rem;
-  cursor: pointer;
-  border-radius: 50%;
-  transform: translateY(-50%); /* Canh giữa theo chiều dọc */
-  z-index: 10;
-}
-
-.slider-button:hover {
-  background-color: #007bff;
-}
-
-.slider-button:disabled {
-  background-color: #ccc; /* Màu xám nhạt khi bị vô hiệu hóa */
-  cursor: not-allowed;
-}
-
-.special-offers,
-.extra-documents {
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.special-offers h2 {
-  background-color: #3ba8cd; /* Màu xanh biển */
-  color: #ffffff; /* Chữ trắng */
-  padding: 10px;
-  border-radius: 8px 8px 0 0; /* Bo góc trên */
-  margin: 0; /* Xóa khoảng cách trên và dưới */
-  font-size: 18px;
-}
-
-ul {
-  list-style: none;
-  padding: 3px;
-  margin-top: 10px;
-}
-
-li {
-  margin-bottom: 10px;
-}
-
-.contact-button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.buy-button {
-  background: linear-gradient(
-    to right,
-    #3ba8cd 0%,
-    #3ba8cd 50%,
-    #fff 50%,
-    #fff 100%
-  );
-  background-size: 200% 100%; /* Gấp đôi chiều rộng để tạo hiệu ứng trượt */
-  background-position: 100% 0; /* Đặt vị trí bắt đầu là phía bên phải */
-  color: #333; /* Màu chữ đen */
-  border: 2px solid #333; /* Đường viền màu đen để tạo sự nổi bật */
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  margin-top: 10px;
-  transition: background-position 0.5s ease, color 0.3s ease; /* Hiệu ứng chuyển vị trí background */
-}
-
-.buy-button:hover {
-  background-position: 0 0; /* Dịch chuyển background về vị trí ban đầu */
-  color: #fff; /* Màu chữ trắng khi hover */
-  border: 2px solid #3ba8cd; /* Đổi màu viền khi hover */
-}
-
-.related-products {
-  margin-top: 20px; /* Khoảng cách với phần trên */
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-top: 1px solid #ddd;
-  width: 100%;
-}
-
-.related-products h3 {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.related-products-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-}
-
-.related-product-card {
-  width: calc(25% - 20px); /* Hiển thị 4 sản phẩm trên một hàng */
-  box-sizing: border-box;
-  margin: 0;
-  text-align: center;
-  border: 1px solid #8d8686;
-  border-radius: 0px;
-  padding: 10px;
-  background-color: #fff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-  cursor: pointer;
-}
-
-.related-product-card:hover {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  transform: translateY(-5px);
-}
-
-.related-product-image {
-  width: 150px;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 10px;
-  transition: transform 0.3s ease;
-  margin: 0 auto;
-}
-
-.related-product-image:hover {
-  transform: scale(1.07);
-}
-
-.related-product-card h4 {
-  margin: 10px 0;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-}
-
-.related-product-card p {
-  font-size: 1rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.reviews {
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-top: 1px solid #ddd;
-}
-.review {
-  margin-bottom: 15px;
-  padding: 15px;
-  border: 1px solid #e0e0e0;
-  border-radius: 5px;
-  background-color: #ffffff;
-}
-.review p {
-  margin: 0;
-}
-.review strong {
-  font-weight: bold;
-}
-.rating-stars {
-  font-size: 18px;
-  color: #ccc; /* Màu mặc định của ngôi sao */
-}
-
-.star.filled {
-  color: #fbc02d; /* Màu vàng cho ngôi sao đã được đánh giá */
-}
-
-.rating-text {
-  margin-left: 5px;
-  font-size: 14px;
-  color: #333;
-}
-
-.tabs {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.tabs button {
-  padding: 10px 20px;
-  background-color: #f5f5f5;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.tabs button.active {
-  background-color: #3ba8cd;
-  color: white;
-}
+<style lang="scss">
+@import "./ProductDetail.scss";
 </style>

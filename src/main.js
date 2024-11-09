@@ -17,6 +17,7 @@ import store from './store'
 import VueToast from "vue-toast-notification";
 import "vue-toast-notification/dist/theme-sugar.css";
 
+
 library.add(fas, far, fab);
 dom.watch();
 const app = createApp(App)
@@ -31,6 +32,7 @@ app.use(Drawer);
 app.use(VueToast);
 // app.use(Menu);
 // app.use(Switch);
+
 
 app.mount('#app')
 

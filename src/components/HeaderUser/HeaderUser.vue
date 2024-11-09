@@ -25,16 +25,10 @@
                 <a class="nav-link" href="/user/home">Trang chủ</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="">Giới thiệu</a>
+                <a class="nav-link" href="/user/about">Giới thiệu</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="/user/product">Sản phẩm</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="">Blog</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="">Liên hệ</a>
               </li>
             </ul>
             <div class="auth-links">

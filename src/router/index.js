@@ -21,6 +21,8 @@ import ProductManager from  '../views/Admin/ProductManager.vue'
 import OrderManager from '../views/Admin/OrderManager/OrderManager.vue'
 import UserManager from '../views/Admin/UserManager/UserManager.vue'
 import Chat from "../components/Chat/Chat.vue";
+import ReviewManager from '../views/Admin/ReviewManager/ReviewManager.vue'
+import About from '../views/User/AboutUser/About.vue'
 
 
 const routes = [
@@ -41,6 +43,13 @@ const routes = [
   {
     path: "/user/home",
     component: Home,
+    meta: {
+      layout: LoginLayout,
+    },
+  },
+  {
+    path: "/user/about",
+    component: About,
     meta: {
       layout: LoginLayout,
     },
@@ -128,6 +137,13 @@ const routes = [
   {
     path: "/users",
     component: UserManager,
+    meta: {
+      layout: AdminLayout,
+    },
+  },
+  {
+    path: "/review",
+    component: ReviewManager,
     meta: {
       layout: AdminLayout,
     },

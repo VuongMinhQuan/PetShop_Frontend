@@ -1,29 +1,37 @@
 <template>
   <div class="sidebar">
+    <div class="logo-container">
+      <img src="@/assets/logo3.png" alt="Logo" class="logo" />
+    </div>
     <ul>
       <li>
         <router-link to="/dashboard">
-          <i class="fas fa-tachometer-alt"></i>Dashboard
+          <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
         </router-link>
       </li>
       <li>
         <router-link to="/products">
-          <i class="fas fa-box"></i>Sản phẩm
+          <i class="fas fa-box"></i><span>Sản phẩm</span>
         </router-link>
       </li>
       <li>
         <router-link to="/order">
-          <i class="fa-regular fa-file"></i>Đơn hàng
+          <i class="fa-regular fa-file"></i><span>Đơn hàng</span>
         </router-link>
       </li>
       <li>
         <router-link to="/revenue">
-          <i class="fas fa-chart-line"></i>Doanh thu
+          <i class="fas fa-chart-line"></i><span>Doanh thu</span>
         </router-link>
       </li>
       <li>
         <router-link to="/users">
-          <i class="fas fa-users"></i>Người dùng
+          <i class="fas fa-users"></i><span>Người dùng</span>
+        </router-link>
+      </li>
+      <li>
+        <router-link to="/review">
+          <i class="fa-regular fa-star"></i><span>Đánh giá</span>
         </router-link>
       </li>
     </ul>
@@ -51,6 +59,18 @@ export default {
   padding-top: 20px;
 }
 
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.logo {
+  width: 200px;
+  height: auto;
+}
+
 .sidebar ul {
   list-style-type: none;
   padding: 0;
@@ -71,8 +91,14 @@ export default {
 }
 
 .sidebar a i {
-  margin-right: 10px;
+  margin-right: 15px; /* Tăng khoảng cách giữa biểu tượng và chữ */
   font-size: 20px;
+  flex-shrink: 0; /* Đảm bảo biểu tượng không co lại */
+}
+
+.sidebar a span {
+  margin-left: 5px; /* Tạo khoảng cách bổ sung cho văn bản */
+  flex-grow: 1; /* Đẩy văn bản ra xa hơn */
 }
 
 .sidebar a:hover {

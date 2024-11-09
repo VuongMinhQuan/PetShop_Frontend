@@ -60,7 +60,7 @@
     </div>
 
     <!-- Modal Forgot Password -->
-    <div
+    <!-- <div
       class="modal fade"
       id="forgotPasswordModal"
       tabindex="-1"
@@ -116,7 +116,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 

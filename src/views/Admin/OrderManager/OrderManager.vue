@@ -124,14 +124,17 @@
   </div>
 
   <div class="pagination">
-  <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1">
-    Trước
-  </button>
-  <span>Trang {{ currentPage }} / {{ totalPages }}</span>
-  <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages">
-    Sau
-  </button>
-</div>
+    <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1">
+      Trước
+    </button>
+    <span>Trang {{ currentPage }} / {{ totalPages }}</span>
+    <button
+      @click="changePage(currentPage + 1)"
+      :disabled="currentPage === totalPages"
+    >
+      Sau
+    </button>
+  </div>
 
   <transition name="fade">
     <div v-show="isFormVisible"></div>
@@ -206,36 +209,48 @@
         <h3>Thông tin Vận Chuyển</h3>
         <form @submit.prevent="submitShipping">
           <label for="weight">Trọng lượng:</label>
-          <input
-            type="number"
-            v-model="shippingInfo.weight"
-            id="weight"
-            required
-          />
+          <div class="input-wrapper">
+            <input
+              type="number"
+              v-model="shippingInfo.weight"
+              id="weight"
+              required
+            />
+            <span class="unit">(g)</span>
+          </div>
 
           <label for="length">Chiều dài:</label>
-          <input
-            type="number"
-            v-model="shippingInfo.length"
-            id="length"
-            required
-          />
+          <div class="input-wrapper">
+            <input
+              type="number"
+              v-model="shippingInfo.length"
+              id="length"
+              required
+            />
+            <span class="unit">(cm)</span>
+          </div>
 
           <label for="width">Chiều rộng:</label>
-          <input
-            type="number"
-            v-model="shippingInfo.width"
-            id="width"
-            required
-          />
+          <div class="input-wrapper">
+            <input
+              type="number"
+              v-model="shippingInfo.width"
+              id="width"
+              required
+            />
+            <span class="unit">(cm)</span>
+          </div>
 
           <label for="height">Chiều cao:</label>
-          <input
-            type="number"
-            v-model="shippingInfo.height"
-            id="height"
-            required
-          />
+          <div class="input-wrapper">
+            <input
+              type="number"
+              v-model="shippingInfo.height"
+              id="height"
+              required
+            />
+            <span class="unit">(cm)</span>
+          </div>
 
           <label for="required_note">Ghi chú yêu cầu:</label>
           <select v-model="shippingInfo.required_note" id="required_note">
@@ -304,7 +319,9 @@ export default {
         const response = await axiosClient.get("/bookings/getAllBookings");
         if (response.data.success) {
           this.orders = response.data.data; // Gán dữ liệu từ API vào orders
-          this.orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          this.orders.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
           this.filteredOrders = this.orders;
           this.calculateTotalPages();
         }
@@ -561,7 +578,7 @@ export default {
   align-items: center; /* Căn giữa theo chiều dọc */
   margin-bottom: 20px; /* Khoảng cách dưới để tách khỏi bảng */
 }
-.table-header h2{
+.table-header h2 {
   margin: 0;
   font-size: 2.8rem;
   color: #176ba3;
@@ -842,6 +859,28 @@ ul {
   cursor: pointer;
 }
 
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding-right: 30px; /* Tạo khoảng trống cho đơn vị */
+  box-sizing: border-box;
+}
+
+.unit {
+  position: absolute;
+  right: 10px;
+  top: 40%;
+  transform: translateY(-50%);
+  color: #000000;
+  font-size: 14px;
+  pointer-events: none; /* Đảm bảo người dùng không thể chọn hoặc nhấp vào đơn vị */
+}
+
+
 .Shipping {
   border: 2px solid #fbc02d; /* Màu vàng cho đang vận chuyển */
   color: #ffffff;
@@ -906,7 +945,6 @@ ul {
   color: #3ba8cd; /* Màu chữ chính */
   font-weight: bold; /* Chữ đậm */
 }
-
 
 /* Responsive layout */
 @media (max-width: 768px) {

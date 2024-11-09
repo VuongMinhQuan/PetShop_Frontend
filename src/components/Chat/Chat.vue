@@ -267,43 +267,54 @@ export default {
 };
 </script>
 <style scoped>
+
 .notification-dot {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 10px;
-  height: 10px;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
   background-color: red;
   border-radius: 50%;
 }
 .chat-container {
   display: flex;
-  flex-direction: column;
   height: 500px;
   border: 1px solid #ccc;
   padding: 10px;
   position: relative;
 }
 .users-list {
-  margin-bottom: 10px;
-  border-bottom: 1px solid #ccc;
-  padding: 10px;
   background-color: #f9f9f9;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+  overflow-y: auto;
 }
+.chat-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* Chiếm phần còn lại của chiều rộng */
+  background-color: #ffffff;
+}
+
 .user-item {
-  position: relative;
   cursor: pointer;
-  margin-bottom: 5px;
   padding: 5px;
   border: 1px solid #7274ff;
   border-radius: 4px;
+  margin-bottom: 5px;
   background-color: #e3f2fd;
+  position: relative;
 }
+
 .chat-messages {
   flex-grow: 1;
   overflow-y: auto;
-  height: auto; /* Điều chỉnh cho chiều cao tự động mở rộng */
-  margin-bottom: 10px;
+  padding-left: 10px;
+  padding-top: 10px;
+  background-color: #ffffff;
+  /* max-height: calc(80vh - 120px); 
+  border: 1px solid #ccc; */
 }
 
 .select-user-prompt {
@@ -312,18 +323,27 @@ export default {
   text-align: center;
   margin-top: 20px;
 }
+
 .message {
-  margin-bottom: 5px;
+  max-width: 60%;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  clear: both;
+  position: relative;
 }
+
 .sender {
   font-weight: bold;
   margin-right: 5px;
 }
+
 .timestamp {
   font-size: 0.8em;
   color: gray;
   margin-left: 10px;
 }
+
 .chat-input {
   display: flex;
   align-items: center;
@@ -333,11 +353,13 @@ export default {
   position: sticky;
   bottom: 0;
 }
+
 .chat-input input {
   flex-grow: 1;
   padding: 5px;
   margin-right: 5px;
 }
+
 .chat-input button {
   padding: 5px 10px;
   background-color: #7274ff;
@@ -346,6 +368,7 @@ export default {
   border-radius: 4px;
   cursor: pointer;
 }
+
 .chat-input button:hover {
   background-color: #5a5fc4;
 }

@@ -146,31 +146,13 @@ export default {
     },
     async fetchProducts() {
       try {
-        // Lấy tất cả sản phẩm
-        const response = await axiosClient.get("/products/getAllProducts"); // URL của endpoint API
-        console.log(response.data);
+        const response = await axiosClient.get("/products/getAllProducts");
         this.products = response.data.data || response.data;
-
-        // Lấy danh sách sản phẩm yêu thích
-        const favoritesResponse = await axiosClient.get("/users/favorites");
-        const favoriteProducts = favoritesResponse.data.favorites || []; // Danh sách sản phẩm yêu thích
-
-        // Tạo một tập hợp các ID sản phẩm yêu thích để kiểm tra
-        const favoriteIds = favoriteProducts.map((product) => product._id);
-
-        // Cập nhật trạng thái isFavorite cho từng sản phẩm
-        this.products.forEach((product) => {
-          product.currentImage = product.IMAGES[0]; // Thiết lập hình ảnh ban đầu
-          product.isFavorite = favoriteIds.includes(product._id); // Kiểm tra nếu sản phẩm nằm trong danh sách yêu thích
-        });
-
-        // Kiểm tra không có sản phẩm nào
         this.noProductsFound = this.products.length === 0;
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     },
-
     changePage(direction) {
       if (direction === "prev" && this.currentPage > 1) {
         this.currentPage--;
@@ -278,40 +260,23 @@ export default {
         product.isFavorite = !product.isFavorite; // Khôi phục lại trạng thái cũ nếu có lỗi
       }
     },
-
     async filterProducts() {
       try {
         if (this.searchQuery.trim() === "") {
-          this.fetchProducts(); // Nếu ô tìm kiếm trống thì hiển thị tất cả sản phẩm
-          this.noProductsFound = false; // Đặt lại trạng thái
+          this.fetchProducts();
+          this.noProductsFound = false;
           return;
         }
 
-        // Gửi yêu cầu tìm kiếm sản phẩm dựa trên từ khóa
         const response = await axiosClient.get("/products/search", {
           params: { keyword: this.searchQuery.trim() },
         });
 
         this.products = response.data.data || response.data;
-        // Lấy danh sách sản phẩm yêu thích
-        const favoritesResponse = await axiosClient.get("/users/favorites");
-        const favoriteProducts = favoritesResponse.data.favorites || [];
-
-        // Tạo một tập hợp các ID sản phẩm yêu thích để kiểm tra
-        const favoriteIds = favoriteProducts.map((product) => product._id);
-        if (this.products.length === 0) {
-          this.noProductsFound = true;
-        } else {
-          // Nếu có sản phẩm, đặt lại trạng thái không tìm thấy sản phẩm
-          this.noProductsFound = false;
-        }
-        this.products.forEach((product) => {
-          product.currentImage = product.IMAGES[0]; // Thiết lập ảnh chính
-          product.isFavorite = favoriteIds.includes(product._id); // Kiểm tra xem sản phẩm có trong danh sách yêu thích không
-        });
+        this.noProductsFound = this.products.length === 0;
       } catch (error) {
         console.error("Error searching products:", error);
-        this.noProductsFound = true; // Đặt trạng thái không tìm thấy nếu có lỗi
+        this.noProductsFound = true;
       }
     },
     async filterProductsBySubType(subTypes) {
@@ -321,21 +286,6 @@ export default {
         });
 
         this.products = response.data.data || response.data;
-
-        // Lấy danh sách sản phẩm yêu thích
-        const favoritesResponse = await axiosClient.get("/users/favorites");
-        const favoriteProducts = favoritesResponse.data.favorites || []; // Danh sách sản phẩm yêu thích
-
-        // Tạo một tập hợp các ID sản phẩm yêu thích để kiểm tra
-        const favoriteIds = favoriteProducts.map((product) => product._id);
-
-        // Cập nhật trạng thái isFavorite cho từng sản phẩm trong danh sách đã lọc
-        this.products.forEach((product) => {
-          product.currentImage = product.IMAGES[0];
-          product.isFavorite = favoriteIds.includes(product._id); // Kiểm tra nếu sản phẩm nằm trong danh sách yêu thích
-        });
-
-        // Kiểm tra nếu không có sản phẩm nào
         this.noProductsFound = this.products.length === 0;
       } catch (error) {
         console.error("Error filtering products by subType:", error);
@@ -432,7 +382,6 @@ export default {
   display: flex;
   flex-wrap: wrap; /* Cho phép các sản phẩm chuyển xuống hàng mới khi cần */
   gap: 20px; /* Khoảng cách giữa các sản phẩm */
-  justify-content: center; /* Canh giữa các sản phẩm */
 }
 
 /* Thay đổi kích thước sản phẩm dựa trên kích thước màn hình */

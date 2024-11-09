@@ -91,7 +91,7 @@
                 @click="openReviewForm(booking._id, product.PRODUCT_ID._id)"
                 class="review-button"
               >
-                Viết đánh giá
+                {{ product.isReviewed ? "Sửa đánh giá" : "Viết đánh giá" }}
               </button>
             </div>
           </div>
@@ -226,6 +226,7 @@ export default {
         });
       }
     },
+
     async fetchReviewsForProducts() {
       try {
         const userId = this.$store.state.userId; // Lấy ID người dùng từ store hoặc bất kỳ nguồn nào khác
@@ -256,51 +257,69 @@ export default {
         });
       }
     },
-    openReviewForm(bookingId, productId) {
+    async openReviewForm(bookingId, productId) {
       this.selectedBooking = this.bookings.find(
         (booking) => booking._id === bookingId
       );
-      this.selectedProductId = productId; // Lưu id sản phẩm
-      this.isReviewFormVisible[bookingId] = true; // Mở form đánh giá cho booking cụ thể
+      this.selectedProductId = productId;
+      this.isReviewFormVisible[bookingId] = true;
 
-      // Gọi API để lấy thông tin đánh giá cho sản phẩm cụ thể này
-      axiosClient
-        .post("/reviews/getReviewByUserAndProduct", {
-          userId: this.selectedBooking.USER_ID,
-          productId: this.selectedProductId,
-          bookingId: bookingId,
-        })
-        .then((response) => {
-          if (response.data.success) {
-            const review = response.data.data;
-            this.rating = review.RATING; // Lấy rating đã lưu
-            this.comment = review.COMMENT; // Lấy comment đã lưu
-          } else {
-            // Nếu không có đánh giá, reset lại các giá trị
-            this.rating = 0;
-            this.comment = "";
+      try {
+        // Kiểm tra nếu có đánh giá cho sản phẩm
+        const response = await axiosClient.post(
+          `/reviews/getReviewByUserAndProduct`,
+          {
+            userId: this.selectedBooking.USER_ID,
+            productId: this.selectedProductId,
+            bookingId: bookingId,
           }
-        })
-        .catch((error) => {
+        );
+
+        if (response.data.success && response.data.data) {
+          // Nếu có đánh giá, lấy rating và comment hiện có
+          const review = response.data.data;
+          this.rating = review.RATING;
+          this.comment = review.COMMENT;
+          this.reviewId = review._id;
+          this.isEditingReview = true;
+        } else {
+          // Nếu không có đánh giá nào cho sản phẩm, thiết lập giá trị mặc định
+          this.rating = 0;
+          this.comment = "";
+          this.isEditingReview = false;
+          this.reviewId = null;
+        }
+      } catch (error) {
+        // Kiểm tra nếu lỗi là 404 - không có đánh giá nào
+        if (error.response && error.response.status === 404) {
+          // Không có đánh giá, thiết lập giá trị mặc định
+          this.rating = 0;
+          this.comment = "";
+          this.isEditingReview = false;
+          this.reviewId = null;
+        } else {
+          // Xử lý các lỗi khác
           console.error("Lỗi khi lấy thông tin đánh giá:", error);
-          if (error.response && error.response.status === 404) {
-            // Nếu không tìm thấy đánh giá, thiết lập mặc định
-            this.rating = 0;
-            this.comment = "";
-          } else {
-            // Xử lý lỗi khác nếu cần
-            this.$toast.error("Lỗi khi tải dữ liệu đánh giá", {
-              position: "top-right",
-              duration: 3000,
-            });
-          }
-        });
+          this.$toast.error("Không thể tải thông tin đánh giá", {
+            position: "top-right",
+            duration: 3000,
+          });
+          this.rating = 0;
+          this.comment = "";
+          this.isEditingReview = false;
+          this.reviewId = null;
+        }
+      }
     },
+
     closeReviewForm(bookingId) {
-      this.isReviewFormVisible[bookingId] = false; // Đóng form đánh giá cho booking cụ thể
+      this.isReviewFormVisible[bookingId] = false;
       this.rating = 0;
       this.comment = "";
+      this.isEditingReview = false;
+      this.reviewId = null;
     },
+
     setRating(star) {
       this.rating = star;
     },
@@ -309,22 +328,49 @@ export default {
         alert("Vui lòng nhập đầy đủ đánh giá và chọn số sao!");
         return;
       }
+
       const reviewData = {
         userId: this.selectedBooking.USER_ID,
         bookingId: this.selectedBooking._id,
-        productId: this.selectedProductId, // Sử dụng id sản phẩm đã chọn
+        productId: this.selectedProductId,
         rating: this.rating,
         comment: this.comment,
       };
+
       try {
-        await axiosClient.post(
-          "http://localhost:3000/reviews/addReview",
-          reviewData
+        if (this.isEditingReview && this.reviewId) {
+          // Gọi API cập nhật đánh giá
+          await axiosClient.put(
+            `http://localhost:3000/reviews/updateReview/${this.reviewId}`,
+            reviewData
+          );
+          this.$toast.success("Đánh giá của bạn đã được cập nhật!", {
+            position: "top-right",
+            duration: 3000,
+          });
+        } else {
+          // Gọi API thêm đánh giá mới
+          await axiosClient.post(
+            "http://localhost:3000/reviews/addReview",
+            reviewData
+          );
+          this.$toast.success("Đánh giá của bạn đã được gửi!", {
+            position: "top-right",
+            duration: 3000,
+          });
+        }
+
+        // Đánh dấu sản phẩm là đã được đánh giá
+        const product = this.selectedBooking.LIST_PRODUCT.find(
+          (product) => product.PRODUCT_ID._id === this.selectedProductId
         );
-        this.$toast.success("Đánh giá của bạn đã được gửi!", {
-          position: "top-right",
-          duration: 3000,
-        });
+        if (product) {
+          product.isReviewed = true; // Cập nhật isReviewed để hiển thị nút Sửa đánh giá
+        }
+
+        // Đảm bảo rằng Vue phản ứng với sự thay đổi
+        this.bookings = [...this.bookings];
+
         this.closeReviewForm(this.selectedBooking._id);
       } catch (error) {
         console.error("Error submitting review:", error);
@@ -334,6 +380,7 @@ export default {
         });
       }
     },
+
     // Phương thức formatPrice để định dạng giá tiền
     formatPrice(price) {
       return price ? parseFloat(price).toLocaleString("vi-VN") : "0";
@@ -479,7 +526,6 @@ h2 {
 
 .customer-info {
   margin-bottom: 15px;
-  background-color: #f5f5f5;
   padding: 10px;
   border-radius: 8px;
   display: flex; /* Căn các thẻ p theo hàng ngang */
@@ -528,8 +574,12 @@ h2 {
 }
 
 .product-info {
-  flex: 1;
-}
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
 
 .product-info p {
   margin: 5px 0;
