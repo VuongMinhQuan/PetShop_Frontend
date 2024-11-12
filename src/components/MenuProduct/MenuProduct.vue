@@ -89,7 +89,7 @@ export default {
   name: "MenuProduct",
   data() {
     return {
-      isMenuVisible: false, // Trạng thái hiển thị menu
+      isMenuVisible: true, // Trạng thái hiển thị menu
     };
   },
   methods: {

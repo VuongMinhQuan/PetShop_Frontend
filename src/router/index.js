@@ -44,21 +44,21 @@ const routes = [
     path: "/user/home",
     component: Home,
     meta: {
-      layout: LoginLayout,
+      layout: UserLayout,
     },
   },
   {
     path: "/user/about",
     component: About,
     meta: {
-      layout: LoginLayout,
+      layout: UserLayout,
     },
   },
   {
     path: "/user/profile",
     component: Profile,
     meta: {
-      layout: LoginLayout,
+      layout: UserLayout,
     },
   },
   {

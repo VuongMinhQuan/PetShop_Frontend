@@ -1,8 +1,11 @@
 <template>
   <div class="login-page">
     <div class="login-container">
-      <h2>Chào mừng bạn đến với PetMart</h2>
-      <form @submit.prevent="handleLogin">
+      <h2>Chào mừng bạn đến với Q-PetShop</h2>
+      <form
+        v-if="!showForgotPasswordForm && !showResetPasswordForm"
+        @submit.prevent="handleLogin"
+      >
         <div class="form-floating mb-2">
           <input
             type="text"
@@ -12,7 +15,9 @@
             placeholder=""
             required
           />
-          <label for="login-identifier" class="text-blue">Nhập Email/Số điện thoại</label>
+          <label for="login-identifier" class="text-blue"
+            >Nhập Email/Số điện thoại</label
+          >
         </div>
         <div class="form-floating mb-2">
           <input
@@ -43,6 +48,72 @@
           </p>
         </div>
       </form>
+      <!-- Form Quên mật khẩu -->
+      <form
+        v-if="showForgotPasswordForm"
+        @submit.prevent="sendForgotPassword"
+        class="forgot-password-form"
+      >
+        <h3>Quên mật khẩu</h3>
+        <p>Vui lòng nhập email để nhận mã OTP khôi phục mật khẩu</p>
+        <div class="form-floating mb-2">
+          <input
+            type="email"
+            v-model="forgotEmail"
+            class="form-control form-control-lg blue-border"
+            placeholder=" "
+            required
+          />
+          <label for="forgot-email" class="text-blue">Nhập Email</label>
+        </div>
+        <button type="submit">Gửi yêu cầu</button>
+        <p style="margin-top: 20px">
+          <a href="#" @click.prevent="cancelForgotPassword"
+            >Quay lại đăng nhập</a
+          >
+        </p>
+      </form>
+      <!-- Form Đặt lại mật khẩu -->
+      <form
+        v-if="showResetPasswordForm"
+        @submit.prevent="resetPassword"
+        class="reset-password-form"
+      >
+        <h3>Đặt lại mật khẩu</h3>
+        <div class="form-floating mb-2">
+          <input
+            type="text"
+            v-model="otpCode"
+            class="form-control form-control-lg blue-border"
+            placeholder=" "
+            required
+          />
+          <label for="otp-code" class="text-blue">Nhập mã OTP</label>
+        </div>
+        <div class="form-floating mb-2">
+          <input
+            type="password"
+            v-model="newPassword"
+            class="form-control form-control-lg blue-border"
+            placeholder=" "
+            required
+          />
+          <label for="new-password" class="text-blue">Nhập mật khẩu mới</label>
+        </div>
+        <div class="form-floating mb-2">
+          <input
+            type="password"
+            v-model="confirmNewPassword"
+            class="form-control form-control-lg blue-border"
+            placeholder=" "
+            required
+          />
+          <label for="confirm-password" class="text-blue"
+            >Xác nhận mật khẩu mới</label
+          >
+        </div>
+        <button type="submit">Đặt lại mật khẩu</button>
+      </form>
       <div class="text-center mb-4">
         <p class="text-muted">Hoặc đăng nhập bằng:</p>
         <div class="social-buttons">
@@ -58,94 +129,90 @@
         </div>
       </div>
     </div>
-
-    <!-- Modal Forgot Password -->
-    <!-- <div
-      class="modal fade"
-      id="forgotPasswordModal"
-      tabindex="-1"
-      aria-labelledby="forgotPasswordModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="forgotPasswordModalLabel">
-              Quên mật khẩu
-            </h5>
-            <button
-              type="button"
-              class="btn-close ms-auto"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="handleForgotPassword">
-              <div v-if="!otpSent" class="mb-3">
-                <label for="forgotEmail" class="form-label">Nhập Email:</label>
-                <input
-                  type="email"
-                  id="forgotEmail"
-                  v-model="forgotEmail"
-                  class="form-control"
-                  required
-                />
-                <button
-                  type="button"
-                  class="btn btn-primary mt-2"
-                  @click="sendOtp"
-                >
-                  Gửi OTP
-                </button>
-              </div>
-              <div v-if="otpSent" class="mb-3">
-                <label for="otp" class="form-label">Mã xác nhận OTP:</label>
-                <input
-                  type="text"
-                  id="otp"
-                  v-model="otp"
-                  class="form-control"
-                  required
-                />
-              </div>
-              <button v-if="otpSent" type="submit" class="btn btn-primary">
-                Xác nhận
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div> -->
   </div>
 </template>
 
 <script>
+import axiosClient from "../../../api/axiosClient";
 import { mapActions } from "vuex";
 export default {
   data() {
     return {
       identifier: "",
       password: "",
+      showForgotPasswordForm: false,
+      showResetPasswordForm: false,
+      forgotEmail: "",
+      otpCode: "",
+      newPassword: "",
+      confirmNewPassword: "",
     };
   },
   methods: {
-    ...mapActions(['login']),
+    ...mapActions(["login"]),
     async handleLogin() {
       // Kiểm tra giá trị đầu vào để xác định là email hay số điện thoại
-      const isEmail = this.identifier.includes('@');
+      const isEmail = this.identifier.includes("@");
       const payload = {
-        [isEmail ? 'EMAIL' : 'PHONE_NUMBER']: this.identifier,
+        [isEmail ? "EMAIL" : "PHONE_NUMBER"]: this.identifier,
         PASSWORD: this.password,
       };
       try {
         // const result = await this.$store.dispatch('login', payload);
         await this.login(payload);
-        
       } catch (error) {
         this.$message.error(
           error.response?.data?.message || "Đăng nhập thất bại!"
         );
+      }
+    },
+    showForgotPasswordModal() {
+      this.showForgotPasswordForm = true;
+      this.showResetPasswordForm = false;
+    },
+    cancelForgotPassword() {
+      this.showForgotPasswordForm = false;
+      this.forgotEmail = ""; // Xóa email đã nhập
+    },
+    async sendForgotPassword() {
+      try {
+        const response = await axiosClient.post("/users/forgotPassword", {
+          email: this.forgotEmail,
+        });
+        if (response.data.success) {
+          this.$message.success(
+            "Yêu cầu đã được gửi. Vui lòng kiểm tra email để nhận mã OTP."
+          );
+          this.showForgotPasswordForm = false;
+          this.showResetPasswordForm = true;
+        } else {
+          this.$message.error("Không thể gửi yêu cầu quên mật khẩu.");
+        }
+      } catch (error) {
+        this.$message.error("Đã xảy ra lỗi khi gửi yêu cầu quên mật khẩu!");
+      }
+    },
+    async resetPassword() {
+      if (this.newPassword !== this.confirmNewPassword) {
+        this.$message.error("Mật khẩu không khớp!");
+        return;
+      }
+
+      try {
+        const response = await axiosClient.post("/users/resetPassword", {
+          email: this.forgotEmail,
+          otp: this.otpCode,
+          newPassword: this.newPassword,
+        });
+        if (response.data.success) {
+          this.$message.success("Đặt lại mật khẩu thành công!");
+          this.showResetPasswordForm = false;
+          this.showForgotPasswordForm = false;
+        } else {
+          this.$message.error("Không thể đặt lại mật khẩu.");
+        }
+      } catch (error) {
+        this.$message.error("Đã xảy ra lỗi khi đặt lại mật khẩu!");
       }
     },
   },
@@ -153,5 +220,5 @@ export default {
 </script>
 
 <style scoped>
-@import './Login.scss'; /* Import file SCSS mới */
+@import "./Login.scss"; /* Import file SCSS mới */
 </style>

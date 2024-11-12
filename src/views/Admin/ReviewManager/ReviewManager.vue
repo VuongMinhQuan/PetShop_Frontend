@@ -2,7 +2,11 @@
   <div class="review-manager">
     <h1>Quản lý đánh giá</h1>
     <div class="reviews-container">
-      <div v-for="review in reviews" :key="review._id" class="review-card">
+      <div
+        v-for="review in paginatedReviews"
+        :key="review._id"
+        class="review-card"
+      >
         <div class="review-header">
           <h2>{{ review.productName }}</h2>
           <p class="review-date">{{ formatDate(review.reviewDate) }}</p>
@@ -46,6 +50,22 @@
         </div>
       </div>
     </div>
+    <!-- Pagination Controls -->
+    <div class="pagination">
+      <button
+        @click="changePage(currentPage - 1)"
+        :disabled="currentPage === 1"
+      >
+        Trước
+      </button>
+      <span>Trang {{ currentPage }} / {{ totalPages }}</span>
+      <button
+        @click="changePage(currentPage + 1)"
+        :disabled="currentPage === totalPages"
+      >
+        Sau
+      </button>
+    </div>
   </div>
 </template>
 
@@ -58,7 +78,19 @@ export default {
   data() {
     return {
       reviews: [],
+      currentPage: 1, // Trang hiện tại
+      reviewsPerPage: 10,
     };
+  },
+  computed: {
+    totalPages() {
+      return Math.ceil(this.reviews.length / this.reviewsPerPage);
+    },
+    paginatedReviews() {
+      const start = (this.currentPage - 1) * this.reviewsPerPage;
+      const end = start + this.reviewsPerPage;
+      return this.reviews.slice(start, end);
+    },
   },
   mounted() {
     this.fetchAllReviews();
@@ -69,8 +101,9 @@ export default {
         const response = await axios.get(
           "http://localhost:3000/reviews/getAllReviewsWithStatus"
         );
-        console.log("API response data:", response.data.data); // Kiểm tra dữ liệu trả về
-        this.reviews = response.data.data;
+        this.reviews = response.data.data.sort(
+          (a, b) => new Date(b.reviewDate) - new Date(a.reviewDate)
+        );
       } catch (error) {
         console.error("Lỗi khi lấy danh sách đánh giá:", error);
       }
@@ -105,6 +138,11 @@ export default {
         console.error("Lỗi khi cập nhật trạng thái đánh giá:", error);
       }
     },
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+      }
+    },
   },
 };
 </script>
@@ -115,6 +153,7 @@ export default {
 }
 
 h1 {
+  color: #176ba3;
   text-align: center;
   margin-bottom: 20px;
 }
@@ -144,7 +183,7 @@ h1 {
 
 .review-date {
   font-size: 0.9em;
-  color: #888;
+  color: #1380c9;
 }
 
 .review-content {
@@ -194,5 +233,39 @@ h1 {
 }
 .show-button {
   background-color: #4caf50; /* Màu xanh lá */
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.pagination button {
+  background-color: #3ba8cd;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.pagination button:hover {
+  background-color: #2a88a2;
+  transform: translateY(-2px);
+}
+
+.pagination button:disabled {
+  background-color: #a3d4e4;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  font-size: 16px;
+  color: #3ba8cd;
+  font-weight: bold;
 }
 </style>

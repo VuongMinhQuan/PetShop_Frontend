@@ -333,8 +333,7 @@
 }
 .special-offers {
     width: 100%;
-    padding: 15px;
-    margin-top: 15px;
+    
 }
 
 .special-offers h2 {
@@ -477,7 +476,7 @@ li {
 }
 
 .review {
-    margin-bottom: 15px;
+    margin-top: 15px;
     padding: 15px;
     border: 1px solid #e0e0e0;
     border-radius: 5px;
@@ -542,8 +541,12 @@ li {
     display: flex;
     align-items: center;
     font-size: 14px;
+    width: 20%;
+    margin-bottom: 2px;
 }
-
+.distribution-row span{
+    width: 10px;
+}
 .bar {
     flex: 1;
     height: 8px;
@@ -672,6 +675,84 @@ li {
     animation: fadeIn 0.3s ease;
     z-index: 1001;
     /* Đảm bảo modal nằm trên overlay */
+}
+
+.review-form h3 {
+    margin-bottom: 15px;
+    font-size: 20px;
+    color: #333;
+}
+
+.star-rating {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.star {
+    font-size: 24px;
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.star.active {
+    color: #ffd700;
+    /* Màu vàng cho sao khi được chọn */
+}
+
+.comment-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical;
+    margin-bottom: 15px;
+    transition: border-color 0.3s;
+}
+
+.comment-input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.submit-button,
+.cancel-button {
+    padding: 10px 15px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.submit-button {
+    background-color: #28a745;
+    /* Nền xanh lá */
+    color: #fff;
+}
+
+.submit-button:hover {
+    background-color: #218838;
+}
+
+.cancel-button {
+    background-color: #dc3545;
+    /* Nền đỏ */
+    color: #fff;
+}
+
+.cancel-button:hover {
+    background-color: #c82333;
 }
 
 .close {

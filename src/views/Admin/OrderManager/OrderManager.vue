@@ -795,6 +795,7 @@ ul {
 }
 
 .product-info {
+  height: 100%;
   display: flex;
   flex-direction: column; /* Căn thông tin theo chiều dọc */
 }

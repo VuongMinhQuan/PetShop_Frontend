@@ -57,11 +57,26 @@
           </h1>
         </div>
       </div>
+      <!-- Thẻ Tổng số đơn hàng thành công -->
+      <div class="card card-green">
+        <div class="card-icon">
+          <i class="fa-solid fa-check"></i>
+          <!-- Icon dấu kiểm -->
+        </div>
+        <div class="card-content">
+          <p>Tổng đơn hàng thành công</p>
+          <h1>{{ totalCompletedOrders }}</h1>
+        </div>
+      </div>
     </div>
     <section class="filter-section">
       <div class="filter-group-container">
         <label class="filter-label">Bộ lọc thời gian</label>
-        <select v-model="timeFrame" @change="fetchDataForCharts" class="large-select">
+        <select
+          v-model="timeFrame"
+          @change="fetchDataForCharts"
+          class="large-select"
+        >
           <option value="day">Theo ngày</option>
           <option value="month">Theo tháng</option>
           <option value="year">Theo năm</option>
@@ -167,6 +182,7 @@ export default {
       totalProduct: 0,
       totalRating: 0,
       totalRevenue: 0,
+      totalCompletedOrders: 0,
       currentYear: new Date().getFullYear(),
     };
   },
@@ -175,6 +191,7 @@ export default {
     this.fetchMonthlyRevenue();
     this.fetchTotalProductCount();
     this.fetchTotalReviews();
+    this.fetchTotalCompletedOrders();
     this.fetchDataForCharts();
   },
   computed: {
@@ -328,7 +345,7 @@ export default {
       const ctx = document
         .getElementById("bookingStatusChart")
         .getContext("2d");
-        
+
       this.bookingStatusChart = new ChartJS(ctx, {
         type: "line",
         data: {
@@ -418,6 +435,16 @@ export default {
         console.error("Error fetching total reviews:", error);
       }
     },
+    async fetchTotalCompletedOrders() {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/bookings/complete"
+        );
+        this.totalCompletedOrders = response.data.data.completeBookingsCount;
+      } catch (error) {
+        console.error("Error fetching completed orders count:", error);
+      }
+    },
     formatPrice(value) {
       return value.toLocaleString("vi-VN") + "đ";
     },
@@ -462,7 +489,6 @@ export default {
   font-size: 16px; /* Tăng kích thước chữ */
   padding: 5px; /* Tạo thêm khoảng trống bên trong */
 }
-
 
 .filter-group {
   display: flex;
@@ -527,6 +553,7 @@ export default {
   margin: 5px 0 0;
   font-size: 14px;
   color: #666;
+  margin-bottom: 15px;
 }
 
 .card-content .star {

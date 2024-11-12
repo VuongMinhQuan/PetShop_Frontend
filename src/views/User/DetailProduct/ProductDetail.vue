@@ -295,7 +295,7 @@
               ></textarea>
               <div class="form-actions">
                 <button @click="submitEditedReview" class="submit-button">
-                  Cập nhật đánh giá
+                  Cập nhật
                 </button>
                 <button @click="closeEditModal" class="cancel-button">
                   Hủy
@@ -311,6 +311,7 @@
 
 <script>
 import axiosClient from "../../../api/axiosClient";
+import Swal from "sweetalert2";
 
 export default {
   data() {
@@ -523,29 +524,45 @@ export default {
       }
     },
     async deleteReview(reviewId) {
-      try {
-        const response = await axiosClient.delete(
-          `/reviews/deleteReview/${reviewId}`
-        );
-        if (response.data.success) {
-          this.$toast.success("Xóa đánh giá thành công!", {
-            position: "top-right",
-            duration: 3000,
-          });
-          // Cập nhật lại danh sách đánh giá sau khi xóa
-          this.fetchUserReview();
-        } else {
-          this.$toast.error(response.data.msg, {
+      const result = await Swal.fire({
+        title: "Bạn có chắc chắn muốn xóa đánh giá này không?",
+        text: "Hành động này không thể hoàn tác!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Xóa",
+        cancelButtonText: "Hủy",
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const response = await axiosClient.delete(
+            `/reviews/deleteReview/${reviewId}`
+          );
+          if (response.data.success) {
+            Swal.fire({
+              title: "Đã xóa!",
+              text: "Đánh giá đã được xóa thành công.",
+              icon: "success",
+              confirmButtonText: "Đóng",
+            });
+
+            // Cập nhật lại danh sách đánh giá sau khi xóa
+            this.fetchUserReview();
+          } else {
+            this.$toast.error(response.data.msg, {
+              position: "top-right",
+              duration: 3000,
+            });
+          }
+        } catch (error) {
+          console.error("Lỗi khi xóa đánh giá:", error);
+          this.$toast.error("Có lỗi xảy ra khi xóa đánh giá", {
             position: "top-right",
             duration: 3000,
           });
         }
-      } catch (error) {
-        console.error("Lỗi khi xóa đánh giá:", error);
-        this.$toast.error("Có lỗi xảy ra khi xóa đánh giá", {
-          position: "top-right",
-          duration: 3000,
-        });
       }
     },
     calculateAverageRating() {

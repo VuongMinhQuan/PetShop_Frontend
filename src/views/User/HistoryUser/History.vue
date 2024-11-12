@@ -38,6 +38,9 @@
               }}
             </span>
           </p>
+          <p class="order-date">
+            Ngày đặt: {{ formatDate(booking.createdAt) }}
+          </p>
         </div>
 
         <div class="customer-info">
@@ -87,11 +90,18 @@
             </div>
             <div class="review-action">
               <button
-                v-if="booking.STATUS === 'Complete'"
+                v-if="booking.STATUS === 'Complete' && !product.review"
                 @click="openReviewForm(booking._id, product.PRODUCT_ID._id)"
                 class="review-button"
               >
-                {{ product.isReviewed ? "Sửa đánh giá" : "Viết đánh giá" }}
+                Viết đánh giá
+              </button>
+              <button
+                v-if="booking.STATUS === 'Complete' && product.review"
+                @click="openReviewForm(booking._id, product.PRODUCT_ID._id)"
+                class="review-button"
+              >
+                Sửa đánh giá
               </button>
             </div>
           </div>
@@ -187,6 +197,7 @@ export default {
       selectedBooking: null, // Đơn hàng được chọn để viết đánh giá
       rating: 0,
       comment: "",
+      isReviewed: false,
     };
   },
   computed: {
@@ -202,22 +213,25 @@ export default {
   async created() {
     // Gọi phương thức fetchBooking trong created
     await this.fetchBooking();
+    await this.fetchReviewsForProducts();
   },
   methods: {
     // Phương thức fetchBooking để lấy dữ liệu đơn hàng
     async fetchBooking() {
       try {
         const response = await axiosClient.post("/bookings/getBookingByUserId");
-        this.bookings = response.data.data.map((booking) => {
-          return {
-            ...booking,
-            LIST_PRODUCT: booking.LIST_PRODUCT.map((product) => ({
-              ...product,
-              isReviewed: false, // Mặc định là false
-              review: null,
-            })),
-          };
-        });
+        this.bookings = response.data.data
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sắp xếp theo ngày mới nhất
+          .map((booking) => {
+            return {
+              ...booking,
+              LIST_PRODUCT: booking.LIST_PRODUCT.map((product) => ({
+                ...product,
+                review: null,
+              })),
+            };
+          });
+        console.log(this.bookings);
       } catch (error) {
         console.error("Error fetching bookings:", error);
         this.$toast.error("Lỗi khi tải dữ liệu đơn hàng", {
@@ -229,23 +243,37 @@ export default {
 
     async fetchReviewsForProducts() {
       try {
-        const userId = this.$store.state.userId; // Lấy ID người dùng từ store hoặc bất kỳ nguồn nào khác
+        // Lấy accessToken từ localStorage và giải mã để lấy userId
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          console.warn("Access token not found.");
+          return;
+        }
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const userId = payload.userId || payload.id; // Trích xuất userId hoặc id từ payload
+
+        if (!userId) {
+          console.warn("User ID not found in token payload.");
+          return;
+        }
 
         // Duyệt qua từng booking và sản phẩm trong booking
         for (const booking of this.bookings) {
           for (const product of booking.LIST_PRODUCT) {
+            console.log(product.PRODUCT_ID._id);
             // Gọi API để lấy đánh giá cho sản phẩm
             const response = await axiosClient.post(
               `/reviews/getReviewByUserAndProduct`,
               {
                 userId: userId,
                 productId: product.PRODUCT_ID._id, // Sử dụng ID sản phẩm
+                bookingId: booking._id,
               }
             );
-
             if (response.data.success) {
               product.isReviewed = true; // Đánh dấu là đã đánh giá
-              product.review = response.data.data; // Lưu thông tin đánh giá
+              product.review = response.data.data;
+              console.log(response.data); // Lưu thông tin đánh giá
             }
           }
         }
@@ -380,7 +408,13 @@ export default {
         });
       }
     },
-
+    formatDate(date) {
+      return new Date(date).toLocaleDateString("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+    },
     // Phương thức formatPrice để định dạng giá tiền
     formatPrice(price) {
       return price ? parseFloat(price).toLocaleString("vi-VN") : "0";
@@ -574,12 +608,12 @@ h2 {
 }
 
 .product-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-  }
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
 
 .product-info p {
   margin: 5px 0;

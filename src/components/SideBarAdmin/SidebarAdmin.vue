@@ -20,11 +20,6 @@
         </router-link>
       </li>
       <li>
-        <router-link to="/revenue">
-          <i class="fas fa-chart-line"></i><span>Doanh thu</span>
-        </router-link>
-      </li>
-      <li>
         <router-link to="/users">
           <i class="fas fa-users"></i><span>Người dùng</span>
         </router-link>
@@ -32,6 +27,11 @@
       <li>
         <router-link to="/review">
           <i class="fa-regular fa-star"></i><span>Đánh giá</span>
+        </router-link>
+      </li>
+      <li>
+        <router-link to="/chat">
+          <i class="fa-regular fa-comments"></i><span>Chăm sóc khách hàng</span>
         </router-link>
       </li>
     </ul>
