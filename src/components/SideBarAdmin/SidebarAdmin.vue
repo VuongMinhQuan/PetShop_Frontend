@@ -20,6 +20,11 @@
         </router-link>
       </li>
       <li>
+        <router-link to="/warehouse">
+          <i class="fa-regular fa-note-sticky"></i><span>Phiếu nhập</span>
+        </router-link>
+      </li>
+      <li>
         <router-link to="/users">
           <i class="fas fa-users"></i><span>Người dùng</span>
         </router-link>
