@@ -6,8 +6,17 @@
           <i class="fa-solid fa-money-bill"></i>
         </div>
         <div class="card-content">
-          <p>Tổng doanh thu {{ currentMonth }}</p>
-          <h1>{{ formatPrice(totalRevenue) }}</h1>
+          <p>Doanh thu so với tháng trước</p>
+          <h1>{{ formatPrice(currentMonthRevenue) }}</h1>
+          <p v-if="changePercentage > 0" class="percentage positive">
+            <i class="fa-solid fa-arrow-up"></i>
+            Tăng {{ changePercentage }}%
+          </p>
+          <p v-else-if="changePercentage < 0" class="percentage negative">
+            <i class="fa-solid fa-arrow-down"></i>
+            Giảm {{ Math.abs(changePercentage) }}%
+          </p>
+          <p v-else class="percentage neutral">Không thay đổi</p>
         </div>
       </div>
 
@@ -184,6 +193,9 @@ export default {
       totalRevenue: 0,
       totalCompletedOrders: 0,
       currentYear: new Date().getFullYear(),
+      currentMonthRevenue: 0,
+      lastMonthRevenue: 0,
+      changePercentage: 0,
     };
   },
   mounted() {
@@ -193,6 +205,7 @@ export default {
     this.fetchTotalReviews();
     this.fetchTotalCompletedOrders();
     this.fetchDataForCharts();
+    this.fetchRevenueComparison(); // Gọi API so sánh doanh thu
   },
   computed: {
     currentMonth() {
@@ -445,6 +458,31 @@ export default {
         console.error("Error fetching completed orders count:", error);
       }
     },
+    async fetchRevenueComparison() {
+      try {
+        const year = new Date().getFullYear(); // Lấy năm hiện tại
+        const month = new Date().getMonth() + 1; // Lấy tháng hiện tại (0-based nên cần +1)
+
+        const response = await axios.get(
+          `http://localhost:3000/bookings/comparison`,
+          {
+            params: {
+              year, // Truyền năm
+              month, // Truyền tháng
+            },
+          }
+        );
+
+        const data = response.data.data;
+
+        this.currentMonthRevenue = data.currentMonthRevenue; // Doanh thu tháng hiện tại
+        this.lastMonthRevenue = data.lastMonthRevenue; // Doanh thu tháng trước
+        this.changePercentage = data.changePercentage; // Phần trăm thay đổi
+      } catch (error) {
+        console.error("Error fetching revenue comparison:", error.message);
+      }
+    },
+
     formatPrice(value) {
       return value.toLocaleString("vi-VN") + "đ";
     },
@@ -629,6 +667,23 @@ export default {
   font-size: 18px;
   color: #333;
   margin-left: 8px;
+}
+.percentage {
+  font-size: 16px;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.percentage.positive {
+  color: #4caf50; /* Màu xanh lá cho tăng */
+}
+
+.percentage.negative {
+  color: #f44336; /* Màu đỏ cho giảm */
+}
+
+.percentage.neutral {
+  color: #9e9e9e; /* Màu xám nếu không thay đổi */
 }
 
 .charts {

@@ -23,6 +23,7 @@ import UserManager from '../views/Admin/UserManager/UserManager.vue'
 import Chat from "../components/Chat/Chat.vue";
 import ReviewManager from '../views/Admin/ReviewManager/ReviewManager.vue'
 import About from '../views/User/AboutUser/About.vue'
+import WarehouseManager from '../views/Admin/WarehouseManager/WarehouseManager.vue'
 
 
 const routes = [
@@ -144,6 +145,13 @@ const routes = [
   {
     path: "/review",
     component: ReviewManager,
+    meta: {
+      layout: AdminLayout,
+    },
+  },
+  {
+    path: "/warehouse",
+    component: WarehouseManager,
     meta: {
       layout: AdminLayout,
     },
