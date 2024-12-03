@@ -43,9 +43,7 @@
       </div>
 
       <div class="payment-info-container">
-        <!-- Container chung với viền cho cả Địa chỉ nhận hàng và Phương thức thanh toán -->
         <div class="combined-info">
-          <!-- Phần địa chỉ nhận hàng -->
           <div class="address-info">
             <h2 class="address-header">
               <i class="fas fa-location-dot location-icon"></i>
@@ -76,18 +74,18 @@
               </div>
             </div>
             <div class="address-column">
-                <p>
-                  <i class="fas fa-location-dot"></i>
-                  Tên đường:
-                  <input
-                    type="text"
-                    v-model="customerAddress"
-                    placeholder="Vui lòng nhập tên đường"
-                    class="input-field"
-                    required
-                  />
-                </p>
-              </div>
+              <p>
+                <i class="fas fa-location-dot"></i>
+                Tên đường:
+                <input
+                  type="text"
+                  v-model="customerAddress"
+                  placeholder="Vui lòng nhập tên đường"
+                  class="input-field"
+                  required
+                />
+              </p>
+            </div>
             <!-- Select cho tỉnh -->
             <div class="address-column">
               <label for="province">Tỉnh/Thành phố:</label>
@@ -203,7 +201,7 @@ export default {
       totalPrice: 0, // Tổng giá tiền
       loading: true, // Trạng thái tải dữ liệu
       isEditing: false, // Trạng thái để hiển thị form chỉnh sửa
-      paymentMethod: "VNPay",
+      paymentMethod: "",
       customerName: this.userInfo?.FULLNAME || "",
       customerPhone: this.userInfo?.PHONE_NUMBER || "",
       customerAddress: "",
@@ -383,6 +381,22 @@ export default {
     },
     async handlePayment() {
       try {
+        if (
+          !this.customerName ||
+          !this.customerPhone ||
+          !this.customerAddress ||
+          !this.selectedProvince ||
+          !this.selectedDistrict ||
+          !this.selectedWard
+        ) {
+          this.$toast.error("Vui lòng nhập đầy đủ thông tin giao hàng", {
+            position: "top-right", // Hiển thị thông báo ở góc trên phải
+            timeout: 3000, // Thời gian hiển thị (ms)
+            closeOnClick: true, // Cho phép đóng thông báo khi click
+            pauseOnHover: true, // Tạm dừng khi di chuột qua
+          });
+          return; // Dừng thực hiện nếu thông tin không hợp lệ
+        }
         const productsDetails = this.selectedProducts.map((product) => ({
           PRODUCT_ID: product.PRODUCT_ID,
           QUANTITY: product.QUANTITY,

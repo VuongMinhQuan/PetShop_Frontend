@@ -221,7 +221,7 @@ export default {
         console.error("Error removing product:", error);
       }
     },
-
+    
     async checkoutSelectedProducts() {
       // Lọc ra các sản phẩm được chọn từ giỏ hàng
       const selectedProducts = this.cart.PRODUCTS.filter(

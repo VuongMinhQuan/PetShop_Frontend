@@ -66,15 +66,15 @@
           </h1>
         </div>
       </div>
-      <!-- Thẻ Tổng số đơn hàng thành công -->
-      <div class="card card-green">
+      <!-- Thẻ Chi phí nhập hàng tháng này -->
+      <div class="card card-warehouse-expense">
         <div class="card-icon">
-          <i class="fa-solid fa-check"></i>
-          <!-- Icon dấu kiểm -->
+          <i class="fa-solid fa-coins"></i>
+          <!-- Icon tiền xu -->
         </div>
         <div class="card-content">
-          <p>Tổng đơn hàng thành công</p>
-          <h1>{{ totalCompletedOrders }}</h1>
+          <p>Chi phí nhập hàng tháng này</p>
+          <h1>{{ formatPrice(totalWarehouseCost) }}</h1>
         </div>
       </div>
     </div>
@@ -141,11 +141,13 @@
         <canvas id="bookingStatusChart"></canvas>
       </section>
     </div>
+    <section class="chart-section top-selling-chart-section">
+      <h2 class="top-selling-chart-section-title">Top 5 sản phẩm bán chạy</h2>
+      <div class="chart-wrapper">
+        <canvas id="topSellingProductsChart"></canvas>
+      </div>
+    </section>
   </div>
-
-  <!-- <div class="charts">
-    <Chart />
-  </div> -->
 </template>
 
 <script>
@@ -160,6 +162,8 @@ import {
   Tooltip,
   Legend,
   Filler,
+  BarController,
+  BarElement,
 } from "chart.js";
 import axios from "../../api/axiosClient";
 // import Chart from "./Chart/Chart.vue";
@@ -172,7 +176,9 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  BarController,
+  BarElement
 );
 
 export default {
@@ -196,6 +202,9 @@ export default {
       currentMonthRevenue: 0,
       lastMonthRevenue: 0,
       changePercentage: 0,
+      topSellingProducts: [], // Dữ liệu sản phẩm bán chạy
+      topSellingProductsChart: null,
+      totalWarehouseCost: 0,
     };
   },
   mounted() {
@@ -203,9 +212,10 @@ export default {
     this.fetchMonthlyRevenue();
     this.fetchTotalProductCount();
     this.fetchTotalReviews();
-    this.fetchTotalCompletedOrders();
+    this.fetchWarehouseCost();
     this.fetchDataForCharts();
-    this.fetchRevenueComparison(); // Gọi API so sánh doanh thu
+    this.fetchRevenueComparison();
+    this.fetchTopSellingProducts();
   },
   computed: {
     currentMonth() {
@@ -228,6 +238,17 @@ export default {
     },
   },
   methods: {
+    async fetchTopSellingProducts() {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/bookings/topselling"
+        );
+        this.topSellingProducts = response.data.data; // Giả sử API trả về mảng sản phẩm
+        this.updateTopSellingProductsChart();
+      } catch (error) {
+        console.error("Error fetching top-selling products:", error);
+      }
+    },
     handleMonthChange() {
       if (this.selectedMonth) {
         const [year, month] = this.selectedMonth.split("-");
@@ -315,6 +336,103 @@ export default {
         console.error("Error fetching booking status data:", error);
       }
     },
+    updateTopSellingProductsChart() {
+      if (this.topSellingProductsChart) this.topSellingProductsChart.destroy();
+
+      const ctx = document
+        .getElementById("topSellingProductsChart")
+        .getContext("2d");
+
+      // Đảm bảo cả hai mảng `quantities` và `revenues` có cùng độ dài
+      const labels = this.topSellingProducts.map(
+        (product) => product.productName || "Không xác định"
+      );
+      const quantities = this.topSellingProducts.map(
+        (product) => product.totalQuantity || 0 // Giá trị mặc định là 0
+      );
+      const revenues = this.topSellingProducts.map(
+        (product) => product.totalRevenue || 0 // Giá trị mặc định là 0
+      );
+
+      // Nếu không có dữ liệu, sử dụng dữ liệu mẫu
+      if (labels.length === 0) {
+        labels.push("Không có dữ liệu");
+        quantities.push(0);
+        revenues.push(0);
+      }
+
+      this.topSellingProductsChart = new ChartJS(ctx, {
+        type: "bar",
+        data: {
+          labels, // Tên các sản phẩm
+          datasets: [
+            {
+              label: "Số lượng đã bán",
+              data: quantities, // Dữ liệu số lượng đã bán
+              backgroundColor: "rgba(114, 116, 255, 0.6)", // Màu xanh dương
+              borderColor: "#7274FF",
+              borderWidth: 1,
+              yAxisID: "y1", // Gán trục y riêng
+            },
+            {
+              label: "Doanh thu (VND)",
+              data: revenues, // Dữ liệu doanh thu
+              backgroundColor: "rgba(76, 175, 80, 0.6)", // Màu xanh lá
+              borderColor: "#4CAF50",
+              borderWidth: 1,
+              yAxisID: "y2", // Gán trục y riêng
+            },
+          ],
+        },
+        options: {
+          responsive: false,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: "bottom",
+            },
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Tên sản phẩm",
+              },
+            },
+            y1: {
+              position: "left", // Trục y cho số lượng đã bán
+              title: {
+                display: true,
+                text: "Số lượng",
+              },
+              beginAtZero: true, // Bắt đầu từ 0
+              ticks: {
+                stepSize: 1, // Khoảng cách giữa các giá trị
+              },
+            },
+            y2: {
+              position: "right", // Trục y cho doanh thu
+              title: {
+                display: true,
+                text: "Doanh thu (VND)",
+              },
+              beginAtZero: true,
+              ticks: {
+                callback: function (value) {
+                  // Format giá trị thành số tiền
+                  return value.toLocaleString("vi-VN") + "đ";
+                },
+              },
+              grid: {
+                drawOnChartArea: false, // Không hiển thị lưới từ trục y2
+              },
+            },
+          },
+        },
+      });
+    },
+
     updateRevenueChart() {
       if (this.revenueChart) this.revenueChart.destroy();
       const ctx = document.getElementById("revenueChart").getContext("2d");
@@ -402,6 +520,16 @@ export default {
           },
         },
       });
+    },
+    async fetchWarehouseCost() {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/warehouses/value-currentmonth"
+        );
+        this.totalWarehouseCost = response.data.data.totalValue;
+      } catch (error) {
+        console.error("Error fetching warehouse cost:", error.message);
+      }
     },
     async fetchActiveUserCount() {
       try {
@@ -532,22 +660,33 @@ export default {
   display: flex;
   gap: 10px; /* Khoảng cách giữa input và nút */
 }
+#revenueChart,
+#bookingStatusChart,
+#topSellingProductsChart {
+  width: 600px; /* Chiều rộng cố định */
+  height: 400px; /* Chiều cao cố định */
+  max-width: 600px; /* Giới hạn chiều rộng tối đa */
+  max-height: 400px; /* Giới hạn chiều cao tối đa */
+  display: block;
+  margin: 0 auto; /* Căn giữa biểu đồ */
+}
+
 .charts-container {
   display: flex;
   gap: 20px;
+  width: 1200px !important; /* Đặt chiều rộng cố định */
+  height: 400px !important;
 }
 
 .chart-section {
   flex: 1;
-  min-width: 300px;
-  padding: 20px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 400px; /* Đảm bảo không nhỏ hơn kích thước này */
+  min-height: 300px;
 }
+
 .charts-container canvas {
-  width: 100% !important; /* Chiếm hết chiều rộng */
-  height: 100% !important; /* Chiếm hết chiều cao */
+  width: 600px !important; /* Đặt chiều rộng cố định */
+  height: 400px !important; /* Đặt chiều cao cố định */
 }
 .card {
   position: relative;
@@ -662,6 +801,23 @@ export default {
 .card-content .star.filled {
   color: #ff9800; /* Màu ngôi sao khi được đánh giá */
 }
+.card-warehouse-expense {
+  background-color: #fdecea; /* Nền đỏ nhạt */
+  border: 1px solid #f44336; /* Viền đỏ */
+}
+
+.card-warehouse-expense .card-icon {
+  background-color: #f44336; /* Nền icon đỏ */
+  color: #ffffff; /* Màu icon trắng */
+}
+
+.card-warehouse-expense .card-content h1 {
+  color: #f44336; /* Màu chữ đỏ */
+}
+
+.card-warehouse-expense .card-content p {
+  color: #b71c1c; /* Màu chữ đỏ đậm */
+}
 
 .rating-value {
   font-size: 18px;
@@ -689,6 +845,7 @@ export default {
 .charts {
   margin-top: 20px;
 }
+
 .refresh-button {
   background-color: #4caf50; /* Màu nền xanh lá */
   color: #ffffff; /* Màu chữ trắng */
@@ -706,6 +863,47 @@ export default {
 
 .refresh-button:hover {
   background-color: #388e3c; /* Màu xanh lá đậm hơn khi hover */
+}
+
+.top-selling-chart-section {
+  display: flex;
+  flex-direction: column; /* Đặt các phần tử con theo cột */
+  align-items: center; /* Căn giữa nội dung theo chiều ngang */
+  justify-content: center; /* Căn giữa nội dung theo chiều dọc */
+  width: 100%; /* Đảm bảo phần tử chiếm hết chiều rộng */
+  padding: 20px;
+  background-color: #ffffff; /* Nền trắng */
+  border-radius: 12px; /* Góc bo tròn */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
+}
+
+/* Canvas biểu đồ */
+#topSellingProductsChart {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 1000px; /* Đặt giới hạn chiều rộng */
+  max-height: 1000px; /* Đặt giới hạn chiều cao */
+  margin-right: 80px;
+}
+
+/* Tiêu đề và nhãn biểu đồ */
+.top-selling-chart-section-title {
+  font-size: 20px; /* Kích thước chữ lớn */
+  font-weight: bold; /* Chữ in đậm */
+  text-align: center; /* Canh giữa tiêu đề */
+  margin-bottom: 10px; /* Khoảng cách giữa tiêu đề và biểu đồ */
+  color: #333; /* Màu chữ xám đậm */
+}
+.chart-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+/* Hiệu ứng hover cho biểu đồ */
+.chart-bar:hover {
+  opacity: 0.8; /* Giảm độ rõ khi hover */
 }
 
 /* Responsive layout */

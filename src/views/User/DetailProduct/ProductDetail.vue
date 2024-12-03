@@ -161,7 +161,6 @@
 
         <!-- Phần Đánh giá -->
         <div v-if="activeTab === 'Đánh giá'" class="reviews">
-          <h3>Đánh giá</h3>
 
           <!-- Tabs trong phần Đánh giá -->
           <div class="review-tabs">

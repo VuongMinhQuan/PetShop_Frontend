@@ -13,11 +13,13 @@
             v-model="identifier"
             class="form-control form-control-lg blue-border"
             placeholder=""
-            required
           />
           <label for="login-identifier" class="text-blue"
             >Nhập Email/Số điện thoại</label
           >
+          <p v-if="errors.identifier" class="text-danger">
+            {{ errors.identifier }}
+          </p>
         </div>
         <div class="form-floating mb-2">
           <input
@@ -28,8 +30,10 @@
             placeholder=" "
           />
           <label for="login-password" class="text-blue">Mật khẩu</label>
+          <p v-if="errors.password" class="text-danger">
+            {{ errors.password }}
+          </p>
         </div>
-
         <button type="submit">Đăng nhập</button>
         <div
           style="
@@ -114,20 +118,6 @@
         </div>
         <button type="submit">Đặt lại mật khẩu</button>
       </form>
-      <div class="text-center mb-4">
-        <p class="text-muted">Hoặc đăng nhập bằng:</p>
-        <div class="social-buttons">
-          <button type="button" class="btn btn-google rounded-pill mb-2">
-            <i class="fab fa-google"></i> Google
-          </button>
-          <button type="button" class="btn btn-facebook rounded-pill mb-2">
-            <i class="fab fa-facebook-f"></i> Facebook
-          </button>
-          <button type="button" class="btn btn-apple rounded-pill mb-2">
-            <i class="fab fa-apple"></i> Apple
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -146,19 +136,38 @@ export default {
       otpCode: "",
       newPassword: "",
       confirmNewPassword: "",
+      errors: {
+        identifier: "",
+        password: "",
+      },
     };
   },
   methods: {
     ...mapActions(["login"]),
     async handleLogin() {
-      // Kiểm tra giá trị đầu vào để xác định là email hay số điện thoại
+      // Reset lỗi
+      this.errors.identifier = "";
+      this.errors.password = "";
+
+      // Kiểm tra trường nhập
+      if (!this.identifier) {
+        this.errors.identifier = "Vui lòng nhập email hoặc số điện thoại!";
+      }
+      if (!this.password) {
+        this.errors.password = "Vui lòng nhập mật khẩu!";
+      }
+
+      // Nếu có lỗi, không tiếp tục xử lý
+      if (this.errors.identifier || this.errors.password) {
+        return;
+      }
+
       const isEmail = this.identifier.includes("@");
       const payload = {
         [isEmail ? "EMAIL" : "PHONE_NUMBER"]: this.identifier,
         PASSWORD: this.password,
       };
       try {
-        // const result = await this.$store.dispatch('login', payload);
         await this.login(payload);
       } catch (error) {
         this.$message.error(

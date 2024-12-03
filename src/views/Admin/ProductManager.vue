@@ -9,7 +9,11 @@
         @keyup.enter="filterProducts"
         class="search-input"
       />
-      <select v-model="selectedSubType" @change="filterProducts" class="filter-select">
+      <select
+        v-model="selectedSubType"
+        @change="filterProducts"
+        class="filter-select"
+      >
         <option value="">Tất cả</option>
         <option value="Chó">Chó</option>
         <option value="Mèo">Mèo</option>
@@ -29,6 +33,9 @@
   <div v-if="showModal" class="modal">
     <div class="modal-content">
       <h3>{{ isEditing ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới" }}</h3>
+      <div v-if="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
       <form @submit.prevent="isEditing ? updateProduct() : createProduct()">
         <div class="form-group">
           <label for="product-name">Tên sản phẩm:</label>
@@ -216,6 +223,7 @@ export default {
         Bag: "Ba lô",
         Cage: "Chuồng",
       },
+      errorMessage: "",
     };
   },
   async mounted() {
@@ -235,7 +243,9 @@ export default {
     async getProducts() {
       try {
         const response = await axios.get("/products/getAllProducts");
-        this.products = response.data.sort((a, b) => a.NAME.localeCompare(b.NAME));
+        this.products = response.data.sort((a, b) =>
+          a.NAME.localeCompare(b.NAME)
+        );
         this.filteredProducts = this.products;
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -254,17 +264,39 @@ export default {
       // Lọc theo subType đã chọn
       if (this.selectedSubType) {
         const subTypeMapping = {
-          Chó: ["Alaska", "Husky", "Golden", "Bull Pháp", "Corgi", "Poodle", "Pug", "Samoyed"],
-          Mèo: ["ALD", "ALN", "Ba Tư", "Bengal", "Munchkin", "Scottish", "Xiêm", "Sphynx"],
+          Chó: [
+            "Alaska",
+            "Husky",
+            "Golden",
+            "Bull Pháp",
+            "Corgi",
+            "Poodle",
+            "Pug",
+            "Samoyed",
+          ],
+          Mèo: [
+            "ALD",
+            "ALN",
+            "Ba Tư",
+            "Bengal",
+            "Munchkin",
+            "Scottish",
+            "Xiêm",
+            "Sphynx",
+          ],
           "Thức ăn cho chó": ["FDog"],
           "Thức ăn cho mèo": ["FCat"],
           "Đồ chơi": ["Toy"],
           "Ba lô": ["Bag"],
-          "Chuồng": ["Cage"],
+          Chuồng: ["Cage"],
         };
-        const subTypesToFilter = subTypeMapping[this.selectedSubType] || [this.selectedSubType];
+        const subTypesToFilter = subTypeMapping[this.selectedSubType] || [
+          this.selectedSubType,
+        ];
         filtered = filtered.filter((product) =>
-          product.TYPE.subTypes.some((subType) => subTypesToFilter.includes(subType))
+          product.TYPE.subTypes.some((subType) =>
+            subTypesToFilter.includes(subType)
+          )
         );
       }
 
@@ -346,9 +378,15 @@ export default {
           },
         });
         this.showModal = false;
+        this.errorMessage = "";
         await this.getProducts();
       } catch (error) {
-        console.error("Error creating product:", error);
+        if (error.response && error.response.data.message) {
+          this.errorMessage = error.response.data.message; // Lưu thông báo lỗi từ backend
+        } else {
+          console.error("Error creating product:", error);
+          this.errorMessage = "Đã xảy ra lỗi, vui lòng thử lại."; // Thông báo lỗi mặc định
+        }
       }
     },
     async updateProduct() {
@@ -711,7 +749,6 @@ export default {
   position: relative; /* Đảm bảo rằng z-index hoạt động */
 }
 
-
 .pagination button {
   background-color: #3ba8cd;
   color: white;
@@ -738,4 +775,11 @@ export default {
   color: #3ba8cd;
   font-weight: bold;
 }
+.error-message {
+  color: red;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
 </style>

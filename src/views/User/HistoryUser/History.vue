@@ -220,6 +220,7 @@ export default {
     async fetchBooking() {
       try {
         const response = await axiosClient.post("/bookings/getBookingByUserId");
+        console.log(response.data);
         this.bookings = response.data.data
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sắp xếp theo ngày mới nhất
           .map((booking) => {
@@ -231,7 +232,7 @@ export default {
               })),
             };
           });
-        console.log(this.bookings);
+        // console.log(this.bookings);
       } catch (error) {
         console.error("Error fetching bookings:", error);
         this.$toast.error("Lỗi khi tải dữ liệu đơn hàng", {
@@ -260,7 +261,7 @@ export default {
         // Duyệt qua từng booking và sản phẩm trong booking
         for (const booking of this.bookings) {
           for (const product of booking.LIST_PRODUCT) {
-            console.log(product.PRODUCT_ID._id);
+            // console.log(product.PRODUCT_ID._id);
             // Gọi API để lấy đánh giá cho sản phẩm
             const response = await axiosClient.post(
               `/reviews/getReviewByUserAndProduct`,
@@ -273,7 +274,7 @@ export default {
             if (response.data.success) {
               product.isReviewed = true; // Đánh dấu là đã đánh giá
               product.review = response.data.data;
-              console.log(response.data); // Lưu thông tin đánh giá
+              // console.log(response.data); // Lưu thông tin đánh giá
             }
           }
         }

@@ -21,10 +21,21 @@
       </div>
       <!-- Hiển thị tin nhắn nếu đã chọn người dùng -->
       <div v-else>
-        <div v-for="(message, index) in messages" :key="index" class="message">
-          <span class="sender">{{ message.sender }}:</span>
-          <span class="content">{{ message.content }}</span>
-          <span class="timestamp">{{ formatTime(message.createdAt) }}</span>
+        <div v-for="(messageGroup, date) in groupedMessages" :key="date">
+          <!-- Hiển thị ngày -->
+          <div class="date-header">
+            {{ formatDateHeader(date) }}
+          </div>
+          <!-- Hiển thị tin nhắn trong ngày -->
+          <div
+            v-for="(message, index) in messageGroup"
+            :key="index"
+            class="message"
+          >
+            <span class="sender">{{ message.sender }}:</span>
+            <span class="content">{{ message.content }}</span>
+            <span class="timestamp">{{ formatTime(message.createdAt) }}</span>
+          </div>
         </div>
       </div>
       <!-- Input tin nhắn -->
@@ -67,6 +78,19 @@ export default {
     // Thuộc tính tính toán cho userId
     userId() {
       return this.userInfo ? this.userInfo._id : null;
+    },
+    groupedMessages() {
+      return this.messages.reduce((groups, message) => {
+        const date = new Date(message.createdAt);
+        const messageDate = `${date.getFullYear()}-${
+          date.getMonth() + 1
+        }-${date.getDate()}`; // Định dạng ngày YYYY-MM-DD
+        if (!groups[messageDate]) {
+          groups[messageDate] = [];
+        }
+        groups[messageDate].push(message);
+        return groups;
+      }, {});
     },
   },
   watch: {
@@ -254,6 +278,29 @@ export default {
         minute: "2-digit",
       }); // Định dạng thời gian
     },
+    formatDateHeader(date) {
+      const today = new Date(); // Ngày hôm nay
+      const messageDate = new Date(date); // Ngày từ dữ liệu
+
+      // Tạo chuỗi định dạng cho ngày hôm nay và ngày từ dữ liệu
+      const todayString = `${today.getFullYear()}-${
+        today.getMonth() + 1
+      }-${today.getDate()}`;
+      const messageDateString = `${messageDate.getFullYear()}-${
+        messageDate.getMonth() + 1
+      }-${messageDate.getDate()}`;
+
+      // Kiểm tra xem ngày từ dữ liệu có khớp với ngày hôm nay không
+      if (messageDateString === todayString) {
+        return "Hôm nay";
+      }
+
+      // Nếu không phải ngày hôm nay, trả về ngày theo định dạng DD/MM/YYYY
+      return `Ngày ${messageDate.getDate()}/${
+        messageDate.getMonth() + 1
+      }/${messageDate.getFullYear()}`;
+    },
+
     updateUserNotification(senderId) {
       const user = this.users.find((user) => user._id === senderId);
       if (user) {
@@ -267,7 +314,6 @@ export default {
 };
 </script>
 <style scoped>
-
 .notification-dot {
   position: absolute;
   top: 5px;
@@ -279,7 +325,7 @@ export default {
 }
 .chat-container {
   display: flex;
-  height: 500px;
+  height: 750px;
   border: 1px solid #ccc;
   padding: 10px;
   position: relative;
@@ -371,5 +417,13 @@ export default {
 
 .chat-input button:hover {
   background-color: #5a5fc4;
+}
+
+.date-header {
+  text-align: center;
+  margin: 10px 0;
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #7274ff;
 }
 </style>

@@ -15,7 +15,6 @@
           </div>
         </div>
       </div>
-
       <!-- Search Section -->
       <div class="search-section">
         <input
@@ -25,11 +24,35 @@
           @keyup.enter="filterProducts"
         />
       </div>
+      <!-- Price Range Filter Section -->
+      <div class="price-filter">
+        <h3>Lọc sản phẩm theo giá</h3>
+        <select
+          v-model="selectedPriceRange"
+          @change="filterProductsByPriceRange"
+        >
+          <option value="all">Tất cả</option>
+          <option value="0-500000">0 - 500.000 ₫</option>
+          <option value="500000-1000000">500.000 ₫ - 1.000.000 ₫</option>
+          <option value="1000000-5000000">1.000.000 ₫ - 5.000.000 ₫</option>
+          <option value="5000000-10000000">5.000.000 ₫ - 10.000.000 ₫</option>
+          <option value="10000000-20000000">10.000.000 ₫ - 20.000.000 ₫</option>
+          <option value="20000000-50000000">20.000.000 ₫ - 50.000.000 ₫</option>
+        </select>
+      </div>
 
       <!-- Products Section -->
       <div class="products">
-        <div v-if="noProductsFound" class="no-products">
-          Sản phẩm không tồn tại!
+        <div v-if="noProductsFound" class="text-center mt-5">
+          <div class="alert" role="alert">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9VJb44bt8yuWo0v1o6D5muQyMpM7nmHRJCg&s"
+              alt="No products"
+              class="img-fluid mb-3"
+              style="max-width: 400px"
+            />
+            <p class="font-italic">Không có sản phẩm phù hợp</p>
+          </div>
         </div>
         <div
           v-else
@@ -105,6 +128,8 @@ export default {
       currentIndex: 0,
       products: [], // Đảm bảo biến này được khởi tạo đúng
       searchQuery: "",
+      filteredProducts: [],
+      selectedPriceRange: "all",
       noProductsFound: false,
       currentPage: 1, // Trang hiện tại
       itemsPerPage: 12, // Số sản phẩm mỗi trang
@@ -114,25 +139,29 @@ export default {
     isLogin() {
       return this.$store.state.isLoggedIn; // Truy cập trực tiếp vào state trong Vuex store
     },
-    totalPages() {
-      return Math.ceil(this.products.length / this.itemsPerPage);
-    },
-    // Lấy danh sách sản phẩm thuộc trang hiện tại
     paginatedProducts() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.products.slice(start, end);
+      return this.filteredProducts.slice(start, end); // Sử dụng `filteredProducts` thay vì `products`
+    },
+    totalPages() {
+      return Math.ceil(this.filteredProducts.length / this.itemsPerPage); // Tổng số trang dựa trên sản phẩm đã lọc
     },
   },
   mounted() {
     this.startCarousel();
     const subType = this.$route.query.subType;
-    if (subType) {
-      this.filterProductsBySubType([subType]); // Gọi hàm lọc sản phẩm
-    } else {
-      this.fetchProducts(); // Nếu không có subType, lấy tất cả sản phẩm
-    }
+
+    // Đảm bảo gọi API lấy danh sách yêu thích trước
+    this.fetchUserFavorites().then(() => {
+      if (subType) {
+        this.filterProductsBySubType([subType]); // Gọi hàm lọc sản phẩm
+      } else {
+        this.fetchProducts(); // Lấy tất cả sản phẩm
+      }
+    });
   },
+
   methods: {
     startCarousel() {
       const items = document.querySelectorAll(".carousel-item");
@@ -144,15 +173,52 @@ export default {
         items[this.currentIndex].classList.add("active");
       }, 5000); // Change every 5 seconds
     },
+    syncFavorites() {
+      if (!this.favoriteIds) return; // Nếu chưa có danh sách yêu thích, thoát sớm
+
+      this.filteredProducts.forEach((product) => {
+        product.isFavorite = this.favoriteIds.includes(product._id);
+      });
+    },
+    async filterProductsByPriceRange() {
+      if (this.selectedPriceRange === "all") {
+        this.filteredProducts = this.products; // Hiển thị tất cả sản phẩm
+      } else {
+        const [minPrice, maxPrice] = this.selectedPriceRange
+          .split("-")
+          .map(Number);
+
+        // Lọc sản phẩm theo khoảng giá
+        this.filteredProducts = this.products.filter((product) => {
+          const price = Number(product.PRICE); // Chuyển `PRICE` sang số
+          return price >= minPrice && price <= maxPrice;
+        });
+      }
+
+      // Kiểm tra nếu không có sản phẩm nào phù hợp
+      this.noProductsFound = this.filteredProducts.length === 0;
+      this.currentPage = 1; // Reset về trang đầu tiên khi lọc
+    },
     async fetchProducts() {
       try {
         const response = await axiosClient.get("/products/getAllProducts");
         this.products = response.data.data || response.data;
-        this.noProductsFound = this.products.length === 0;
+        this.filteredProducts = this.products; // Ban đầu hiển thị tất cả sản phẩm
+        this.syncFavorites();
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     },
+    async fetchUserFavorites() {
+      try {
+        const response = await axiosClient.get("/users/profile"); // API trả về thông tin người dùng
+        const user = response.data; // Dữ liệu người dùng
+        this.favoriteIds = user.FAVORITES || []; // Lưu danh sách ID sản phẩm yêu thích
+      } catch (error) {
+        console.error("Error fetching user favorites:", error);
+      }
+    },
+
     changePage(direction) {
       if (direction === "prev" && this.currentPage > 1) {
         this.currentPage--;
@@ -262,33 +328,54 @@ export default {
     },
     async filterProducts() {
       try {
-        if (this.searchQuery.trim() === "") {
-          this.fetchProducts();
+        const keyword = this.searchQuery.trim(); // Lấy từ khóa tìm kiếm
+        if (keyword === "") {
+          // Nếu ô tìm kiếm trống, hiển thị tất cả sản phẩm
+          this.filteredProducts = [...this.products]; // Đảm bảo Vue nhận diện thay đổi
           this.noProductsFound = false;
+          this.syncFavorites();
           return;
         }
 
+        // Gọi API tìm kiếm sản phẩm
         const response = await axiosClient.get("/products/search", {
-          params: { keyword: this.searchQuery.trim() },
+          params: { keyword },
         });
 
-        this.products = response.data.data || response.data;
-        this.noProductsFound = this.products.length === 0;
+        // Cập nhật danh sách sản phẩm đã lọc
+        this.filteredProducts = [...(response.data.data || response.data)];
+
+        // Kiểm tra nếu không có sản phẩm
+        this.noProductsFound = this.filteredProducts.length === 0;
+        this.syncFavorites();
+
+        // Reset về trang đầu tiên
+        this.currentPage = 1;
       } catch (error) {
         console.error("Error searching products:", error);
+
+        // Xử lý lỗi
+        this.filteredProducts = [];
         this.noProductsFound = true;
       }
     },
     async filterProductsBySubType(subTypes) {
       try {
         const response = await axiosClient.post("/products/filter", {
-          subType: subTypes,
+          subType: subTypes, // Truyền danh mục cần lọc vào API
         });
 
-        this.products = response.data.data || response.data;
-        this.noProductsFound = this.products.length === 0;
+        // Gán kết quả trả về vào filteredProducts
+        this.filteredProducts = [...(response.data.data || [])];
+
+        // Kiểm tra nếu không có sản phẩm
+        this.noProductsFound = this.filteredProducts.length === 0;
+
+        // Reset lại pagination
+        this.currentPage = 1;
       } catch (error) {
-        console.error("Error filtering products by subType:", error);
+        console.error("Lỗi lọc sản phẩm theo subType:", error);
+        this.filteredProducts = [];
         this.noProductsFound = true;
       }
     },
@@ -445,6 +532,25 @@ export default {
   color: #333; /* Đảm bảo màu chữ */
   transition: color 0.3s ease; /* Hiệu ứng chuyển màu mượt mà */
 }
+.text-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh; /* Chiều cao vùng thông báo */
+  margin: 0 auto; /* Căn giữa */
+}
+
+.text-center img {
+  max-width: 300px; /* Giới hạn kích thước ảnh */
+  margin-bottom: 20px; /* Khoảng cách dưới hình ảnh */
+}
+
+.text-center p {
+  font-size: 1.2rem; /* Kích thước chữ */
+  font-weight: bold; /* Đậm chữ */
+  color: #666; /* Màu chữ */
+}
 
 /* CSS cho nút "Chọn mua" */
 .buy-button {
@@ -538,6 +644,33 @@ export default {
   font-size: 16px; /* Kích thước chữ của số trang */
   color: #3ba8cd; /* Màu chữ chính */
   font-weight: bold; /* Chữ đậm */
+}
+.price-filter {
+  margin: 20px 0;
+  text-align: left;
+  width: 250px;
+}
+
+.price-filter h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.price-filter select {
+  width: 100%; /* Đảm bảo chiều rộng 100% */
+  padding: 10px; /* Khoảng cách bên trong */
+  font-size: 1rem; /* Kích thước chữ */
+  border: 1px solid #ccc; /* Viền xám nhạt */
+  border-radius: 5px; /* Bo góc */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Hiệu ứng chuyển màu */
+}
+
+.price-filter select:focus {
+  border-color: #3dafd5; /* Màu viền khi focus */
+  outline: none; /* Xóa viền mặc định */
+  box-shadow: 0 0 8px #25809f; /* Tạo hiệu ứng bóng */
 }
 
 /* Media queries */

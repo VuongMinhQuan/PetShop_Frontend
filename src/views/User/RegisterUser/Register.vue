@@ -9,22 +9,22 @@
         <h2>Đăng ký</h2>
         <div class="form-group">
           <label for="FULLNAME">Họ và tên:</label>
-          <input type="text" id="FULLNAME" v-model="FULLNAME" required />
+          <input type="text" id="FULLNAME" v-model="FULLNAME" />
           <span v-if="errors.FULLNAME" class="error">{{
-                errors.FULLNAME
-              }}</span>
+            errors.FULLNAME
+          }}</span>
         </div>
         <div class="form-group">
           <label for="EMAIL">Email:</label>
-          <input type="email" id="EMAIL" v-model="EMAIL" required />
+          <input type="email" id="EMAIL" v-model="EMAIL" />
           <span v-if="errors.EMAIL" class="error">{{ errors.EMAIL }}</span>
         </div>
         <div class="form-group">
           <label for="PHONE_NUMBER">Số điện thoại:</label>
-          <input type="tel" id="PHONE_NUMBER" v-model="PHONE_NUMBER" required />
+          <input type="tel" id="PHONE_NUMBER" v-model="PHONE_NUMBER" />
           <span v-if="errors.PHONE_NUMBER" class="error">{{
-                errors.PHONE_NUMBER
-              }}</span>
+            errors.PHONE_NUMBER
+          }}</span>
         </div>
         <div class="form-group">
           <label for="PASSWORD">Mật khẩu:</label>
@@ -33,7 +33,6 @@
               :type="showPassword ? 'text' : 'password'"
               id="PASSWORD"
               v-model="PASSWORD"
-              required
             />
             <span
               @click="togglePasswordVisibility('PASSWORD')"
@@ -42,8 +41,8 @@
               <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
             </span>
             <span v-if="errors.PASSWORD" class="error">{{
-                errors.PASSWORD
-              }}</span>
+              errors.PASSWORD
+            }}</span>
           </div>
         </div>
         <div class="form-group">
@@ -53,7 +52,6 @@
               :type="showConfirmPassword ? 'text' : 'password'"
               id="confirmPassword"
               v-model="confirmPassword"
-              required
             />
             <span
               @click="togglePasswordVisibility('showConfirmPassword')"
@@ -64,20 +62,18 @@
               ></i>
             </span>
             <span v-if="errors.confirmPassword" class="error">{{
-                errors.confirmPassword
-              }}</span>
+              errors.confirmPassword
+            }}</span>
           </div>
         </div>
         <div class="form-group">
           <label for="ADDRESS">Địa chỉ:</label>
-          <input type="text" id="ADDRESS" v-model="ADDRESS" required />
-          <span v-if="errors.ADDRESS" class="error">{{
-                errors.ADDRESS
-              }}</span>
+          <input type="text" id="ADDRESS" v-model="ADDRESS" />
+          <span v-if="errors.ADDRESS" class="error">{{ errors.ADDRESS }}</span>
         </div>
         <button type="submit">Đăng ký</button>
         <p class="login-link">
-          <a href="/user/login">Quay lại trang đăng nhập</a>
+          <a href="/login">Quay lại trang đăng nhập</a>
         </p>
       </form>
       <div v-if="showOtpForm" class="otp-form">
@@ -125,12 +121,38 @@ export default {
   },
   methods: {
     async handleSubmit() {
-      this.errors = {}; // Reset lỗi trước khi gửi yêu cầu
-      // Kiểm tra mật khẩu và xác nhận mật khẩu
-      if (this.PASSWORD !== this.confirmPassword) {
+      this.errors = {}; // Reset lỗi trước khi kiểm tra
+
+      // Kiểm tra từng trường
+      if (!this.FULLNAME) {
+        this.errors.FULLNAME = "Vui lòng nhập họ và tên!";
+      }
+      if (!this.EMAIL) {
+        this.errors.EMAIL = "Vui lòng nhập email!";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.EMAIL)) {
+        this.errors.EMAIL = "Email không hợp lệ!";
+      }
+      if (!this.PHONE_NUMBER) {
+        this.errors.PHONE_NUMBER = "Vui lòng nhập số điện thoại!";
+      }
+      if (!this.PASSWORD) {
+        this.errors.PASSWORD = "Vui lòng nhập mật khẩu!";
+      }
+      if (!this.confirmPassword) {
+        this.errors.confirmPassword = "Vui lòng nhập xác nhận mật khẩu!";
+      } else if (this.PASSWORD !== this.confirmPassword) {
         this.errors.confirmPassword = "Mật khẩu không khớp!";
+      }
+      if (!this.ADDRESS) {
+        this.errors.ADDRESS = "Vui lòng nhập địa chỉ!";
+      }
+
+      // Nếu có lỗi, không gửi yêu cầu đăng ký
+      if (Object.keys(this.errors).length > 0) {
         return;
       }
+
+      // Tiếp tục gửi yêu cầu đăng ký
       try {
         const response = await axiosClient.post("/users/registerUser", {
           FULLNAME: this.FULLNAME,

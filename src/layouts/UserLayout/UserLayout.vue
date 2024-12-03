@@ -63,17 +63,23 @@ const toggleChat = () => {
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  justify-content: flex-end; /* Đẩy nội dung sang bên phải */
+  align-items: center; /* Căn chỉnh theo chiều dọc */
   z-index: 1001;
 }
+
 .chat-modal-content {
-  width: 80%;
-  max-width: 600px;
+  width: 100%;
+  max-width: 400px; /* Chiều rộng tối đa của modal */
+  height: 100%; /* Đặt chiều cao modal chiếm toàn bộ màn hình */
   background-color: white;
-  border-radius: 10px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
-  padding: 20px;
+  border-radius: 0; /* Bỏ bo góc */
+  box-shadow: -4px 0px 12px rgba(0, 0, 0, 0.3); /* Bóng đổ sang trái */
+  padding:  10px 20px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
+
 </style>

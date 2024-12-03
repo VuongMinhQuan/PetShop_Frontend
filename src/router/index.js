@@ -28,6 +28,10 @@ import WarehouseManager from '../views/Admin/WarehouseManager/WarehouseManager.v
 
 const routes = [
   {
+    path: "/",
+    redirect: "/login",
+  },
+  {
     path: "/login",
     component: Login,
     meta: {
